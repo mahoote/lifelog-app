@@ -18,7 +18,7 @@ export function AppButton({
         <Pressable
             accessibilityRole="button"
             onPress={onPress}
-            className="items-center rounded-xl bg-blue-600 px-4 py-3 active:bg-blue-700"
+            className="flex-1 items-center rounded-xl bg-blue-500 px-4 py-3 active:bg-blue-600"
         >
             <Text className="font-medium text-white">{title}</Text>
         </Pressable>

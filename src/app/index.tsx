@@ -12,11 +12,11 @@ export default function Index() {
 
     return (
         <>
-            <View className="gap-4 p-2">
+            <View className="gap-6 p-2">
                 <View className="gap-2">
                     <Text className="text-xl">Glasses Bluetooth</Text>
                     <Text>Status: Not connected</Text>
-                    <View className="gap-2">
+                    <View className="gap-2 flex-row">
                         <AppButton title="Scan for glasses" />
                         <AppButton title="Connect to glasses" />
                     </View>
@@ -27,7 +27,7 @@ export default function Index() {
                     <Text>Status: Not connected</Text>
                     <Text>SSID: ....</Text>
                     <Text>IP: ....</Text>
-                    <View className="gap-2">
+                    <View className="gap-2 flex-row">
                         <AppButton title="Refresh status" />
                         <AppButton
                             title="Connect to wifi"
