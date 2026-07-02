@@ -1,6 +1,6 @@
 import BottomSheet from '@gorhom/bottom-sheet'
 import { useRef, useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
 import WifiDrawer from '@/components/wifiDrawer'
 
@@ -51,16 +51,9 @@ export default function Index() {
                 </View>
             </View>
 
-            {isSheetOpen && (
-                <Pressable
-                    onPress={() => {
-                        sheetRef.current?.close()
-                    }}
-                    className="absolute inset-0 bg-black/50"
-                />
-            )}
             <WifiDrawer
                 sheetRef={sheetRef}
+                isSheetOpen={isSheetOpen}
                 onCloseSheet={() => setIsSheetOpen(false)}
             />
         </>

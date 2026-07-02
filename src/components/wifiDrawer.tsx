@@ -6,13 +6,6 @@ import { AppButton } from '@/components/appButton'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
-interface Props {
-    sheetRef: RefObject<BottomSheetMethods | null>
-    onCloseSheet: () => void
-}
-
-const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
-
 function WifiListComponent() {
     const dispatch = useAppDispatch()
     const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
@@ -43,6 +36,14 @@ function WifiListComponent() {
     )
 }
 
+interface Props {
+    sheetRef: RefObject<BottomSheetMethods | null>
+    onCloseSheet: () => void
+    isSheetOpen: boolean
+}
+
+const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
+
 /**
  * A gorhom bottom drawer.
  * Lists all the available networks the glasses can connect to.
@@ -52,30 +53,44 @@ function WifiListComponent() {
  * @param param0.onCloseSheet - Used to set the closed state of the sheet.
  * @constructor
  */
-export default function WifiDrawer({ sheetRef, onCloseSheet }: Props) {
+export default function WifiDrawer({
+    sheetRef,
+    onCloseSheet,
+    isSheetOpen,
+}: Props) {
     const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
 
     return (
-        <BottomSheet
-            ref={sheetRef}
-            index={-1}
-            enablePanDownToClose
-            onClose={onCloseSheet}
-        >
-            <BottomSheetView className="gap-4 p-4">
-                <Text>Connect glasses to the WiFi your phone uses.</Text>
+        <>
+            {isSheetOpen && (
+                <Pressable
+                    onPress={() => {
+                        sheetRef.current?.close()
+                    }}
+                    className="absolute inset-0 bg-black/40"
+                />
+            )}
+            <BottomSheet
+                ref={sheetRef}
+                index={-1}
+                enablePanDownToClose
+                onClose={onCloseSheet}
+            >
+                <BottomSheetView className="gap-4 p-4">
+                    <Text>Connect glasses to the WiFi your phone uses.</Text>
 
-                <WifiListComponent />
+                    <WifiListComponent />
 
-                {selectedWifi && (
-                    <AppButton
-                        title="Connect"
-                        onPress={() => {
-                            sheetRef.current?.close()
-                        }}
-                    />
-                )}
-            </BottomSheetView>
-        </BottomSheet>
+                    {selectedWifi && (
+                        <AppButton
+                            title="Connect"
+                            onPress={() => {
+                                sheetRef.current?.close()
+                            }}
+                        />
+                    )}
+                </BottomSheetView>
+            </BottomSheet>
+        </>
     )
 }
