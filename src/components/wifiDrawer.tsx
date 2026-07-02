@@ -11,6 +11,34 @@ interface Props {
 
 const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
 
+function WifiListComponent() {
+    const [selectedWifi, setSelectedWifi] = useState<string | null>(null)
+    // TODO: replace state with redux.
+
+    return (
+        <View className="gap-2">
+            {wifiNetworks.map(wifiName => {
+                const isSelected = selectedWifi === wifiName
+
+                return (
+                    <Pressable
+                        key={wifiName}
+                        onPress={() => {
+                            setSelectedWifi(wifiName)
+                        }}
+                        className="p-2"
+                    >
+                        <Text>
+                            {isSelected && '✓ '}
+                            {wifiName}
+                        </Text>
+                    </Pressable>
+                )
+            })}
+        </View>
+    )
+}
+
 /**
  * A gorhom bottom drawer.
  * Lists all the available networks the glasses can connect to.
@@ -21,7 +49,7 @@ const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
  * @constructor
  */
 export default function WifiDrawer({ sheetRef, onCloseSheet }: Props) {
-    const [selectedWifi, setSelectedWifi] = useState<string | null>(null)
+    const [selectedWifi] = useState<string | null>(null)
 
     return (
         <BottomSheet
@@ -33,33 +61,16 @@ export default function WifiDrawer({ sheetRef, onCloseSheet }: Props) {
             <BottomSheetView className="gap-4 p-4">
                 <Text>Connect glasses to the WiFi your phone uses.</Text>
 
-                <View className="gap-2">
-                    {wifiNetworks.map(wifiName => {
-                        const isSelected = selectedWifi === wifiName
+                <WifiListComponent />
 
-                        return (
-                            <Pressable
-                                key={wifiName}
-                                onPress={() => {
-                                    setSelectedWifi(wifiName)
-                                }}
-                                className="p-2"
-                            >
-                                <Text>
-                                    {isSelected && '✓ '}
-                                    {wifiName}
-                                </Text>
-                            </Pressable>
-                        )
-                    })}
-                </View>
-
-                <AppButton
-                    title="Connect"
-                    onPress={() => {
-                        sheetRef.current?.close()
-                    }}
-                />
+                {selectedWifi && (
+                    <AppButton
+                        title="Connect"
+                        onPress={() => {
+                            sheetRef.current?.close()
+                        }}
+                    />
+                )}
             </BottomSheetView>
         </BottomSheet>
     )
