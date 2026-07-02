@@ -3,14 +3,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 export interface ConnectionState {
     bluetoothConnected: boolean
     wifiConnected: boolean
-    selectedWifi: string | null
+    savedWifi: string | null
     wifiIpAddress: string | null
 }
 
 const initialState: ConnectionState = {
     bluetoothConnected: false,
     wifiConnected: false,
-    selectedWifi: null,
+    savedWifi: null,
     wifiIpAddress: null,
 }
 
@@ -18,8 +18,8 @@ const connectionSlice = createSlice({
     name: 'connection',
     initialState,
     reducers: {
-        setSelectedWifi(state, action: PayloadAction<string | null>) {
-            state.selectedWifi = action.payload
+        setSavedWifi(state, action: PayloadAction<string | null>) {
+            state.savedWifi = action.payload
         },
     },
 })

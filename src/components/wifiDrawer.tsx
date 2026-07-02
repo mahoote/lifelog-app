@@ -1,25 +1,34 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { BottomSheetMethods } from '@gorhom/bottom-sheet/src/types'
-import { RefObject } from 'react'
-import { Pressable, View, Text } from 'react-native'
+import { Dispatch, RefObject, SetStateAction, useState } from 'react'
+import { Pressable, View, Text, TextInput } from 'react-native'
 import { AppButton } from '@/components/appButton'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
-function WifiListComponent() {
-    const dispatch = useAppDispatch()
-    const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
+/**
+ * List of the available Wi-Fi networks the glasses can connect to.
+ * @param param0
+ * @param param0.setPressedWifi - The current pressed Wi-Fi by the user.
+ * @constructor
+ */
+function WifiListComponent({
+    setPressedWifi,
+}: {
+    setPressedWifi: Dispatch<SetStateAction<string | null>>
+}) {
+    const selectedWifi = useAppSelector(state => state.connection.savedWifi)
 
     return (
         <View className="gap-2">
-            {wifiNetworks.map(wifiName => {
+            {wifiNetworks.map((wifiName, index) => {
                 const isSelected = selectedWifi === wifiName
 
                 return (
                     <Pressable
-                        key={wifiName}
+                        key={index}
                         onPress={() => {
-                            dispatch(connectionActions.setSelectedWifi(wifiName))
+                            setPressedWifi(wifiName)
                         }}
                         className="p-2"
                     >
@@ -53,31 +62,42 @@ const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
  * @constructor
  */
 export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Props) {
-    const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
+    const dispatch = useAppDispatch()
+    const [pressedWifi, setPressedWifi] = useState<string | null>(null)
+
+    const handleClose = () => {
+        setPressedWifi(null)
+        sheetRef.current?.close()
+    }
+
+    const handleConnect = () => {
+        dispatch(connectionActions.setSavedWifi(pressedWifi))
+        handleClose()
+    }
 
     return (
         <>
-            {isSheetOpen && (
-                <Pressable
-                    onPress={() => {
-                        sheetRef.current?.close()
-                    }}
-                    className="absolute inset-0 bg-black/40"
-                />
-            )}
+            {isSheetOpen && <Pressable onPress={handleClose} className="absolute inset-0 bg-black/40" />}
             <BottomSheet ref={sheetRef} index={-1} enablePanDownToClose onClose={onCloseSheet}>
-                <BottomSheetView className="gap-4 p-4">
-                    <Text>Connect glasses to the WiFi your phone uses.</Text>
+                <BottomSheetView className="gap-4 px-4 pb-8">
+                    {!pressedWifi ? (
+                        <>
+                            <Text className="pt-4">Connect glasses to the WiFi your phone uses.</Text>
+                            <WifiListComponent setPressedWifi={setPressedWifi} />
+                        </>
+                    ) : (
+                        <>
+                            <Pressable onPress={() => setPressedWifi(null)}>
+                                <Text>Back</Text>
+                            </Pressable>
+                            <Text className="text-lg text-center w-full">{pressedWifi}</Text>
 
-                    <WifiListComponent />
-
-                    {selectedWifi && (
-                        <AppButton
-                            title="Connect"
-                            onPress={() => {
-                                sheetRef.current?.close()
-                            }}
-                        />
+                            <View>
+                                <Text>Password:</Text>
+                                <TextInput className="bg-neutral-200 rounded-xl" />
+                            </View>
+                            <AppButton title="Connect" onPress={() => handleConnect()} />
+                        </>
                     )}
                 </BottomSheetView>
             </BottomSheet>
