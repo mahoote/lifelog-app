@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Get current branch name
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+# Initialize commit message file
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# If branch is a hotfix, ensure commit message starts with "hotfix"
+if echo "$BRANCH_NAME" | grep -qE '^hotfix/'; then
+  if ! echo "$COMMIT_MSG" | grep -qE "^hotfix "; then
+    echo "hotfix $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+    echo "✅ Updated commit message: hotfix $COMMIT_MSG"
+  fi
+else
+  # Extract the number at the start of the branch name (only if it's NOT a hotfix)
+  BRANCH_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '^[0-9]+')
+
+  if [ -n "$BRANCH_NUMBER" ] && ! echo "$COMMIT_MSG" | grep -qE "^$BRANCH_NUMBER "; then
+    echo "$BRANCH_NUMBER $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+    echo "✅ Updated commit message: $BRANCH_NUMBER $COMMIT_MSG"
+  fi
+fi

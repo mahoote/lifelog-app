@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Get current branch name
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if branch name starts with a number or "hotfix/"
+if ! echo "$BRANCH_NAME" | grep -qE '^[0-9]+-' && ! echo "$BRANCH_NAME" | grep -qE '^hotfix/'; then
+  echo "❌ Commit rejected: Branch name must start with a number (e.g., '00-my-branch') or 'hotfix/'."
+  exit 1
+fi
+
+# Run lint-staged
+if ! npx lint-staged; then
+  echo "❌ Commit rejected: Lint-staged failed."
+  exit 1
+fi
+
+echo "✅ Lint-staged passed."
