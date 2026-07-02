@@ -24,11 +24,11 @@ export default function Index() {
             </View>
 
             <View className="gap-2">
-                <Text>Devices connected to same WiFi</Text>
-                {/*<ul>*/}
-                {/*    <li>Phone: Eduroam</li>*/}
-                {/*    <li>Glasses: Eduroam</li>*/}
-                {/*</ul>*/}
+                <Text>Devices connected to same WiFi:</Text>
+                <View className="pl-2">
+                    <Text>• Phone: Eduroam</Text>
+                    <Text>• Glasses: Eduroam</Text>
+                </View>
             </View>
         </View>
     )
