@@ -2,7 +2,7 @@ import { Pressable, Text } from 'react-native'
 
 /**
  * Basic button created with Pressable component.
- * @param param0
+ * @param param0 - Props
  * @param param0.title
  * @param param0.onPress
  * @constructor
