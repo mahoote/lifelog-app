@@ -8,6 +8,7 @@ const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
 export default function Index() {
     const sheetRef = useRef<BottomSheet>(null)
     const [selectedWifi, setSelectedWifi] = useState<string | null>(null)
+    const [isSheetOpen, setIsSheetOpen] = useState(false)
 
     return (
         <>
@@ -31,6 +32,7 @@ export default function Index() {
                         <AppButton
                             title="Connect to wifi"
                             onPress={() => {
+                                setIsSheetOpen(true)
                                 sheetRef.current?.expand()
                             }}
                         />
@@ -46,7 +48,20 @@ export default function Index() {
                 </View>
             </View>
 
-            <BottomSheet ref={sheetRef} index={-1}>
+            {isSheetOpen && (
+                <Pressable
+                    onPress={() => {
+                        sheetRef.current?.close()
+                    }}
+                    className="absolute inset-0 bg-black/50"
+                />
+            )}
+            <BottomSheet
+                ref={sheetRef}
+                index={-1}
+                enablePanDownToClose
+                onClose={() => setIsSheetOpen(false)}
+            >
                 <BottomSheetView className="gap-4 p-4">
                     <Text>Connect glasses to the WiFi your phone uses.</Text>
 
