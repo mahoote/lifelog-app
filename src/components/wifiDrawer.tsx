@@ -1,8 +1,10 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { BottomSheetMethods } from '@gorhom/bottom-sheet/src/types'
-import { RefObject, useState } from 'react'
+import { RefObject } from 'react'
 import { Pressable, View, Text } from 'react-native'
 import { AppButton } from '@/components/appButton'
+import { connectionActions } from '@/store/connectionSlice'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 interface Props {
     sheetRef: RefObject<BottomSheetMethods | null>
@@ -12,8 +14,8 @@ interface Props {
 const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
 
 function WifiListComponent() {
-    const [selectedWifi, setSelectedWifi] = useState<string | null>(null)
-    // TODO: replace state with redux.
+    const dispatch = useAppDispatch()
+    const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
 
     return (
         <View className="gap-2">
@@ -24,7 +26,9 @@ function WifiListComponent() {
                     <Pressable
                         key={wifiName}
                         onPress={() => {
-                            setSelectedWifi(wifiName)
+                            dispatch(
+                                connectionActions.setSelectedWifi(wifiName),
+                            )
                         }}
                         className="p-2"
                     >
@@ -49,7 +53,7 @@ function WifiListComponent() {
  * @constructor
  */
 export default function WifiDrawer({ sheetRef, onCloseSheet }: Props) {
-    const [selectedWifi] = useState<string | null>(null)
+    const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
 
     return (
         <BottomSheet
