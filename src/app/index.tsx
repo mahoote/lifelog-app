@@ -1,4 +1,4 @@
-import { BottomSheet } from '@expo/ui/community/bottom-sheet'
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { useRef, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
@@ -31,7 +31,7 @@ export default function Index() {
                         <AppButton
                             title="Connect to wifi"
                             onPress={() => {
-                                sheetRef.current?.snapToIndex(0)
+                                sheetRef.current?.expand()
                             }}
                         />
                     </View>
@@ -47,7 +47,7 @@ export default function Index() {
             </View>
 
             <BottomSheet ref={sheetRef} index={-1}>
-                <View className="gap-4 p-4">
+                <BottomSheetView className="gap-4 p-4">
                     <Text>Connect glasses to the WiFi your phone uses.</Text>
 
                     <View className="gap-2">
@@ -74,10 +74,10 @@ export default function Index() {
                     <AppButton
                         title="Connect"
                         onPress={() => {
-                            sheetRef.current?.snapToIndex(-1)
+                            sheetRef.current?.close()
                         }}
                     />
-                </View>
+                </BottomSheetView>
             </BottomSheet>
         </>
     )
