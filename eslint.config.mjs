@@ -52,7 +52,7 @@ export default tseslint.config(
                 '@typescript-eslint/no-explicit-any': 'error',
             },
 
-            ignores: ['node_modules', '.expo', 'dist', 'build', 'coverage']
+            ignores: ['node_modules', '.expo', 'dist', 'build', 'coverage'],
         },
     ]),
 )
