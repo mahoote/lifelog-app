@@ -19,9 +19,7 @@ function WifiListComponent() {
                     <Pressable
                         key={wifiName}
                         onPress={() => {
-                            dispatch(
-                                connectionActions.setSelectedWifi(wifiName),
-                            )
+                            dispatch(connectionActions.setSelectedWifi(wifiName))
                         }}
                         className="p-2"
                     >
@@ -50,14 +48,11 @@ const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
  * When selecting a Wi-Fi, type in the password and press connect.
  * @param param0 - Props
  * @param param0.sheetRef - Used to open and close the sheet.
- * @param param0.onCloseSheet - Used to set the closed state of the sheet.
+ * @param param0.onCloseSheet - Used to close the sheet when the user presses outside of it.
+ * @param param0.isSheetOpen - Used to determine if the sheet is open or closed.
  * @constructor
  */
-export default function WifiDrawer({
-    sheetRef,
-    onCloseSheet,
-    isSheetOpen,
-}: Props) {
+export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Props) {
     const selectedWifi = useAppSelector(state => state.connection.selectedWifi)
 
     return (
@@ -70,12 +65,7 @@ export default function WifiDrawer({
                     className="absolute inset-0 bg-black/40"
                 />
             )}
-            <BottomSheet
-                ref={sheetRef}
-                index={-1}
-                enablePanDownToClose
-                onClose={onCloseSheet}
-            >
+            <BottomSheet ref={sheetRef} index={-1} enablePanDownToClose onClose={onCloseSheet}>
                 <BottomSheetView className="gap-4 p-4">
                     <Text>Connect glasses to the WiFi your phone uses.</Text>
 
