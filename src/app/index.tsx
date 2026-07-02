@@ -1,6 +1,7 @@
 import { BottomSheet } from '@expo/ui/community/bottom-sheet'
 import { useRef, useState } from 'react'
-import { Button, Pressable, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
+import { AppButton } from '@/components/appButton'
 
 const wifiNetworks = ['Home WiFi', 'Pixel_1234', 'Martin Router', 'UniFi Guest']
 
@@ -10,44 +11,13 @@ export default function Index() {
 
     return (
         <>
-            <BottomSheet ref={sheetRef} index={-1}>
-                <View className="gap-4 p-2">
-                    <Text>Connect glasses to the WiFi your phone uses.</Text>
-                    <View className="gap-1">
-                        {wifiNetworks.map((wifiName, index) => {
-                            const isSelected = selectedWifi === wifiName
-
-                            return (
-                                <Pressable
-                                    key={index}
-                                    onPress={() => {
-                                        setSelectedWifi(wifiName)
-                                    }}
-                                    className="p-1"
-                                >
-                                    <Text>
-                                        {isSelected && '✓ '}
-                                        {wifiName}
-                                    </Text>
-                                </Pressable>
-                            )
-                        })}
-                    </View>
-                    <Button
-                        title="Connect to WiFi"
-                        onPress={() => {
-                            sheetRef.current?.close()
-                        }}
-                    />
-                </View>
-            </BottomSheet>
             <View className="gap-4 p-2">
                 <View className="gap-2">
                     <Text className="text-xl">Glasses Bluetooth</Text>
                     <Text>Status: Not connected</Text>
                     <View className="gap-2">
-                        <Button title="Scan for glasses" />
-                        <Button title="Connect to glasses" />
+                        <AppButton title="Scan for glasses" />
+                        <AppButton title="Connect to glasses" />
                     </View>
                 </View>
 
@@ -57,11 +27,11 @@ export default function Index() {
                     <Text>SSID: ....</Text>
                     <Text>IP: ....</Text>
                     <View className="gap-2">
-                        <Button title="Refresh status" />
-                        <Button
+                        <AppButton title="Refresh status" />
+                        <AppButton
                             title="Connect to wifi"
                             onPress={() => {
-                                sheetRef.current?.expand()
+                                sheetRef.current?.snapToIndex(0)
                             }}
                         />
                     </View>
@@ -75,6 +45,40 @@ export default function Index() {
                     </View>
                 </View>
             </View>
+
+            <BottomSheet ref={sheetRef} index={-1}>
+                <View className="gap-4 p-4">
+                    <Text>Connect glasses to the WiFi your phone uses.</Text>
+
+                    <View className="gap-2">
+                        {wifiNetworks.map(wifiName => {
+                            const isSelected = selectedWifi === wifiName
+
+                            return (
+                                <Pressable
+                                    key={wifiName}
+                                    onPress={() => {
+                                        setSelectedWifi(wifiName)
+                                    }}
+                                    className="p-2"
+                                >
+                                    <Text>
+                                        {isSelected && '✓ '}
+                                        {wifiName}
+                                    </Text>
+                                </Pressable>
+                            )
+                        })}
+                    </View>
+
+                    <AppButton
+                        title="Connect"
+                        onPress={() => {
+                            sheetRef.current?.snapToIndex(-1)
+                        }}
+                    />
+                </View>
+            </BottomSheet>
         </>
     )
 }
