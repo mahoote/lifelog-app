@@ -66,7 +66,7 @@ export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Prop
     const dispatch = useAppDispatch()
     const [pressedWifi, setPressedWifi] = useState<string | null>(null)
 
-    const { snapPoints } = useKeyboardSnapPoint(sheetRef, isSheetOpen, '80%')
+    const { snapPoints } = useKeyboardSnapPoint(sheetRef, isSheetOpen, '75%')
 
     const handleClose = () => {
         setPressedWifi(null)
