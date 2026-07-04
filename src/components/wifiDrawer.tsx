@@ -1,8 +1,9 @@
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
+import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet'
 import { BottomSheetMethods } from '@gorhom/bottom-sheet/src/types'
 import { Dispatch, RefObject, SetStateAction, useState } from 'react'
-import { Pressable, View, Text, TextInput } from 'react-native'
+import { Pressable, View, Text } from 'react-native'
 import { AppButton } from '@/components/appButton'
+import { useKeyboardSnapPoint } from '@/hooks/useKeyboardSnapPoint'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
@@ -65,6 +66,8 @@ export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Prop
     const dispatch = useAppDispatch()
     const [pressedWifi, setPressedWifi] = useState<string | null>(null)
 
+    const { snapPoints } = useKeyboardSnapPoint(sheetRef, isSheetOpen, '80%')
+
     const handleClose = () => {
         setPressedWifi(null)
         sheetRef.current?.close()
@@ -78,8 +81,21 @@ export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Prop
     return (
         <>
             {isSheetOpen && <Pressable onPress={handleClose} className="absolute inset-0 bg-black/40" />}
-            <BottomSheet ref={sheetRef} index={-1} enablePanDownToClose onClose={onCloseSheet}>
-                <BottomSheetView className="gap-4 px-4 pb-8">
+            <BottomSheet
+                ref={sheetRef}
+                index={-1}
+                enablePanDownToClose
+                onClose={onCloseSheet}
+                snapPoints={snapPoints}
+                keyboardBehavior="extend"
+                keyboardBlurBehavior="restore"
+                android_keyboardInputMode="adjustResize"
+            >
+                <BottomSheetScrollView
+                    className="px-4"
+                    contentContainerClassName="gap-4 pb-8"
+                    keyboardShouldPersistTaps="handled"
+                >
                     {!pressedWifi ? (
                         <>
                             <Text className="pt-4">Connect glasses to the WiFi your phone uses.</Text>
@@ -87,19 +103,21 @@ export default function WifiDrawer({ sheetRef, onCloseSheet, isSheetOpen }: Prop
                         </>
                     ) : (
                         <>
-                            <Pressable onPress={() => setPressedWifi(null)}>
-                                <Text>Back</Text>
-                            </Pressable>
-                            <Text className="text-lg text-center w-full">{pressedWifi}</Text>
-
                             <View>
-                                <Text>Password:</Text>
-                                <TextInput className="bg-neutral-200 rounded-xl" />
+                                <Pressable onPress={() => setPressedWifi(null)}>
+                                    <Text>Back</Text>
+                                </Pressable>
+                                <Text className="text-lg text-center w-full">{pressedWifi}</Text>
                             </View>
+
+                            <BottomSheetTextInput
+                                className="bg-neutral-200 rounded-xl"
+                                placeholder="Password"
+                            />
                             <AppButton title="Connect" onPress={() => handleConnect()} />
                         </>
                     )}
-                </BottomSheetView>
+                </BottomSheetScrollView>
             </BottomSheet>
         </>
     )
