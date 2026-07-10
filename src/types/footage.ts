@@ -39,7 +39,7 @@ export interface FootageItem {
     isFavorite: boolean
     importedAt: string
     dayKey: string
-    filePath: string | null
+    fileUri: string | null
     duration: number | null
     notes: string | null
     tags: string | null

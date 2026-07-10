@@ -15,7 +15,7 @@ export function mapFootageItem(footage: FootageItemResponse): FootageItem {
         dayKey: footage.created_at.split('T')[0],
         duration: footage.duration_s,
         isFavorite: false,
-        filePath: null,
+        fileUri: null,
         notes: null,
         tags: null,
     }
