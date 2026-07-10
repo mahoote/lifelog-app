@@ -30,7 +30,8 @@ export async function lifelogGet(endpoint: string, errorMessage?: string): Promi
 
         return response
     } catch (error) {
-        console.error(errorMessage ?? 'Failed to reach lifelog api', error)
+        const message = error instanceof Error ? error.message : String(error)
+        console.warn(errorMessage ?? 'Failed to reach lifelog api', message)
 
         return null
     }
