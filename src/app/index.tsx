@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
 import { getLifelogFootage, getLifelogHealth } from '@/services/lifelogService'
@@ -14,8 +14,10 @@ export default function Index() {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
+    const [displayStatus, setDisplayStatus] = useState('Not connected')
     const [refreshLoading, setRefreshLoading] = useState(false)
     const [processLoading, setProcessLoading] = useState(false)
+    const [pendingAmount, setPendingAmount] = useState(0)
 
     /**
      * Fetches the current health of the lifelog api.
@@ -33,10 +35,20 @@ export default function Index() {
         setProcessLoading(true)
 
         const footage = await getLifelogFootage()
-        if (!footage.length) return
+
+        if (footage.length) {
+            setPendingAmount(footage.length)
+            // TODO: download footage
+        }
 
         setProcessLoading(false)
     }
+
+    useEffect(() => {
+        if (refreshLoading) setDisplayStatus('Updating...')
+        else if (wifiConnected) setDisplayStatus('Connected through WiFi')
+        else setDisplayStatus('Not connected')
+    }, [refreshLoading, wifiConnected])
 
     return (
         <>
@@ -44,7 +56,7 @@ export default function Index() {
                 <View className="gap-4">
                     <View className="gap-2">
                         <Text className="text-xl">Glasses</Text>
-                        <Text>Status: {wifiConnected ? 'Connected through WiFi' : 'Not connected'}</Text>
+                        <Text>Status: {displayStatus}</Text>
                         {wifiConnected && (
                             <>
                                 <Text>SSID: {wifiConnected.ssid}</Text>
@@ -57,14 +69,17 @@ export default function Index() {
                             loading={refreshLoading}
                         />
                     </View>
-                    <View className="gap-2">
-                        <Text className="text-xl">Actions</Text>
-                        <AppButton
-                            title="Process footage"
-                            onPress={() => void handleProcessFootage()}
-                            loading={processLoading}
-                        />
-                    </View>
+                    {wifiConnected && (
+                        <View className="gap-2">
+                            <Text className="text-xl">Actions</Text>
+                            <AppButton
+                                title="Process footage"
+                                onPress={() => void handleProcessFootage()}
+                                loading={processLoading}
+                            />
+                            {pendingAmount > 0 && <Text>Pending footage: {pendingAmount}</Text>}
+                        </View>
+                    )}
                 </View>
             </View>
         </>
