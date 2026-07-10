@@ -8,10 +8,10 @@ import { getUsedFootageStorageBytes } from '@/utils/storageUtils'
 /**
  * Fetches the current state of the lifelog api.
  */
-export async function getLifelogHealth(): Promise<LifelogHealth> {
+export async function getLifelogHealth(): Promise<LifelogHealth | null> {
     const response = await lifelogGet('health')
 
-    if (!response) return { ok: false, ssid: null, ip: null }
+    if (!response) return null
 
     return (await response.json()) as LifelogHealth
 }

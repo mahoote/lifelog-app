@@ -25,8 +25,6 @@ export default function Index() {
         setRefreshLoading(true)
 
         const health = await getLifelogHealth()
-        if (!health) return
-
         dispatch(connectionActions.setWifiConnected(health))
         setRefreshLoading(false)
     }
