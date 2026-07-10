@@ -1,6 +1,6 @@
 import { File, Paths } from 'expo-file-system'
 import { config } from '@/config'
-import { FootageItem } from '@/types/footage'
+import { FootageItem, FootageType } from '@/types/footage'
 import { LifelogHealth } from '@/types/lifelog'
 import { getLifelogApi, lifelogGet } from '@/utils/apiUtils'
 import { getUsedFootageStorageBytes } from '@/utils/storageUtils'
@@ -33,11 +33,13 @@ export async function getLifelogFootage(): Promise<FootageItem[]> {
  * @param id - The id of the footage file to download.
  * @param sizeBytes - The size of the footage file in bytes.
  *                    Used to check if there is enough free storage before downloading.
+ * @param type - Video or photo footage type. Used to determine the file extension.
  * @return The file uri of the downloaded footage.
  */
 export async function downloadFootageById(
     id: string,
     sizeBytes: number,
+    type: FootageType,
 ): Promise<{ data: string | null; continue: boolean }> {
     try {
         const usedBytes = getUsedFootageStorageBytes()
@@ -52,7 +54,9 @@ export async function downloadFootageById(
         const BASE_URL = getLifelogApi()
         const url = `${BASE_URL}/footage/${id}`
 
-        const file = new File(Paths.document, `${id}.mp4`)
+        const fileExtension = type === FootageType.VIDEO ? 'mp4' : 'jpg'
+
+        const file = new File(Paths.document, `${id}.${fileExtension}`)
 
         await File.downloadFileAsync(url, file)
 
