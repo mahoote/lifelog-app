@@ -30,8 +30,8 @@ export default function Index() {
         <>
             <View className="gap-6 p-2">
                 <View className="gap-2">
-                    <Text className="text-xl">Glasses WiFi</Text>
-                    <Text>Status: {wifiConnected ? 'Connected' : 'Not connected'}</Text>
+                    <Text className="text-xl">Glasses</Text>
+                    <Text>Status: {wifiConnected ? 'Connected through WiFi' : 'Not connected'}</Text>
                     {wifiConnected && (
                         <>
                             <Text>SSID: {wifiConnected.ssid}</Text>
@@ -45,10 +45,6 @@ export default function Index() {
                             loading={refreshLoading}
                         />
                     </View>
-                </View>
-
-                <View className="gap-2">
-                    <Text>Devices connected to same WiFi</Text>
                 </View>
             </View>
         </>
