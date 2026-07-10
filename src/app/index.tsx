@@ -29,21 +29,25 @@ export default function Index() {
     return (
         <>
             <View className="gap-6 p-2">
-                <View className="gap-2">
-                    <Text className="text-xl">Glasses</Text>
-                    <Text>Status: {wifiConnected ? 'Connected through WiFi' : 'Not connected'}</Text>
-                    {wifiConnected && (
-                        <>
-                            <Text>SSID: {wifiConnected.ssid}</Text>
-                            <Text>IP: {wifiConnected.ip}</Text>
-                        </>
-                    )}
+                <View className="gap-4">
                     <View className="gap-2">
+                        <Text className="text-xl">Glasses</Text>
+                        <Text>Status: {wifiConnected ? 'Connected through WiFi' : 'Not connected'}</Text>
+                        {wifiConnected && (
+                            <>
+                                <Text>SSID: {wifiConnected.ssid}</Text>
+                                <Text>IP: {wifiConnected.ip}</Text>
+                            </>
+                        )}
                         <AppButton
                             title="Refresh status"
                             onPress={() => void handleRefresh()}
                             loading={refreshLoading}
                         />
+                    </View>
+                    <View className="gap-2">
+                        <Text className="text-xl">Actions</Text>
+                        <AppButton title="Process footage" />
                     </View>
                 </View>
             </View>
