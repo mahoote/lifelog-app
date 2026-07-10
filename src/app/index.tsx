@@ -17,15 +17,6 @@ export default function Index() {
         <>
             <View className="gap-6 p-2">
                 <View className="gap-2">
-                    <Text className="text-xl">Glasses Bluetooth</Text>
-                    <Text>Status: Not connected</Text>
-                    <View className="gap-2">
-                        <AppButton title="Scan for glasses" />
-                        <AppButton title="Connect to glasses" />
-                    </View>
-                </View>
-
-                <View className="gap-2">
                     <Text className="text-xl">Glasses WiFi</Text>
                     <Text>Status: Not connected</Text>
                     <Text>SSID: ....</Text>
@@ -43,11 +34,7 @@ export default function Index() {
                 </View>
 
                 <View className="gap-2">
-                    <Text>Devices connected to same WiFi:</Text>
-                    <View className="pl-2">
-                        <Text>• Phone: Eduroam</Text>
-                        <Text>• Glasses: Eduroam</Text>
-                    </View>
+                    <Text>Devices connected to same WiFi</Text>
                 </View>
             </View>
 
