@@ -1,8 +1,6 @@
-import BottomSheet from '@gorhom/bottom-sheet'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
-import WifiDrawer from '@/components/wifiDrawer'
 import { getLifelogHealth } from '@/services/lifelog-service'
 
 /**
@@ -11,8 +9,6 @@ import { getLifelogHealth } from '@/services/lifelog-service'
  * @constructor
  */
 export default function Index() {
-    const sheetRef = useRef<BottomSheet>(null)
-    const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [hasConnection, setHasConnection] = useState(false)
     const [refreshLoading, setRefreshLoading] = useState(false)
 
@@ -40,13 +36,6 @@ export default function Index() {
                             onPress={() => void handleRefresh()}
                             loading={refreshLoading}
                         />
-                        <AppButton
-                            title="Connect to wifi"
-                            onPress={() => {
-                                setIsSheetOpen(true)
-                                sheetRef.current?.expand()
-                            }}
-                        />
                     </View>
                 </View>
 
@@ -54,12 +43,6 @@ export default function Index() {
                     <Text>Devices connected to same WiFi</Text>
                 </View>
             </View>
-
-            <WifiDrawer
-                sheetRef={sheetRef}
-                isSheetOpen={isSheetOpen}
-                onCloseSheet={() => setIsSheetOpen(false)}
-            />
         </>
     )
 }

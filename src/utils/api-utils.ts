@@ -1,0 +1,29 @@
+/**
+ * Gets the base url from the .env file for the lifelog api
+ * @returns {string | null} The base url for the lifelog api
+ */
+export function getLifelogApi(): string | null {
+    const url = process.env.EXPO_PUBLIC_LIFELOG_API_BASE_URL
+
+    if (!url) {
+        console.error('EXPO_PUBLIC_LIFELOG_API_BASE_URL is not set')
+        return null
+    }
+
+    return url.replace(/\/$/, '')
+}
+
+/**
+ * A generalised function for fetching a GET endpoint for the lifelog api.
+ * @param endpoint
+ * @param errorMessage
+ */
+export async function lifelogGet(endpoint: string, errorMessage?: string): Promise<Response> {
+    const response = await fetch(`${getLifelogApi()}/${endpoint}`)
+
+    if (!response.ok) {
+        throw new Error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
+    }
+
+    return response
+}
