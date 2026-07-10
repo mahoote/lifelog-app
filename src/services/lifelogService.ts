@@ -1,3 +1,4 @@
+import { FootageItem } from '@/types/footage'
 import { LifelogHealth } from '@/types/lifelog'
 import { lifelogGet } from '@/utils/apiUtils'
 
@@ -7,4 +8,12 @@ export async function getLifelogHealth(): Promise<LifelogHealth> {
     if (!response) return { ok: false, ssid: null, ip: null }
 
     return (await response.json()) as LifelogHealth
+}
+
+export async function getLifelogFootage(): Promise<FootageItem[]> {
+    const response = await lifelogGet('footage')
+
+    if (!response) return []
+
+    return (await response.json()) as FootageItem[]
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
-import { getLifelogHealth } from '@/services/lifelogService'
+import { getLifelogFootage, getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
@@ -15,7 +15,12 @@ export default function Index() {
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
     const [refreshLoading, setRefreshLoading] = useState(false)
+    const [processLoading, setProcessLoading] = useState(false)
 
+    /**
+     * Fetches the current health of the lifelog api.
+     * Sets the values to the store.
+     */
     const handleRefresh = async () => {
         setRefreshLoading(true)
 
@@ -24,6 +29,15 @@ export default function Index() {
 
         dispatch(connectionActions.setWifiConnected(health))
         setRefreshLoading(false)
+    }
+
+    const handleProcessFootage = async () => {
+        setProcessLoading(true)
+
+        const footage = await getLifelogFootage()
+        if (!footage.length) return
+
+        setProcessLoading(false)
     }
 
     return (
@@ -47,7 +61,11 @@ export default function Index() {
                     </View>
                     <View className="gap-2">
                         <Text className="text-xl">Actions</Text>
-                        <AppButton title="Process footage" />
+                        <AppButton
+                            title="Process footage"
+                            onPress={() => void handleProcessFootage()}
+                            loading={processLoading}
+                        />
                     </View>
                 </View>
             </View>
