@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
 import { getLifelogHealth } from '@/services/lifelog-service'
+import { connectionActions } from '@/store/connectionSlice'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 /**
  * Connection settings for the app and glasses.
@@ -9,7 +11,9 @@ import { getLifelogHealth } from '@/services/lifelog-service'
  * @constructor
  */
 export default function Index() {
-    const [hasConnection, setHasConnection] = useState(false)
+    const dispatch = useAppDispatch()
+    const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
+
     const [refreshLoading, setRefreshLoading] = useState(false)
 
     const handleRefresh = async () => {
@@ -18,7 +22,7 @@ export default function Index() {
         const health = await getLifelogHealth()
         if (!health) return
 
-        setHasConnection(true)
+        dispatch(connectionActions.setWifiConnected(health))
         setRefreshLoading(false)
     }
 
@@ -27,9 +31,13 @@ export default function Index() {
             <View className="gap-6 p-2">
                 <View className="gap-2">
                     <Text className="text-xl">Glasses WiFi</Text>
-                    <Text>Status: {hasConnection ? 'Connected' : 'Not connected'}</Text>
-                    <Text>SSID: ....</Text>
-                    <Text>IP: ....</Text>
+                    <Text>Status: {wifiConnected ? 'Connected' : 'Not connected'}</Text>
+                    {wifiConnected && (
+                        <>
+                            <Text>SSID: {wifiConnected.ssid}</Text>
+                            <Text>IP: {wifiConnected.ip}</Text>
+                        </>
+                    )}
                     <View className="gap-2">
                         <AppButton
                             title="Refresh status"

@@ -1,17 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { LifelogHealth } from '@/types/lifelog'
 
 export interface ConnectionState {
-    bluetoothConnected: boolean
-    wifiConnected: boolean
     savedWifi: string | null
-    wifiIpAddress: string | null
+    wifiConnected: LifelogHealth | null
 }
 
 const initialState: ConnectionState = {
-    bluetoothConnected: false,
-    wifiConnected: false,
     savedWifi: null,
-    wifiIpAddress: null,
+    wifiConnected: null,
 }
 
 const connectionSlice = createSlice({
@@ -20,6 +17,9 @@ const connectionSlice = createSlice({
     reducers: {
         setSavedWifi(state, action: PayloadAction<string | null>) {
             state.savedWifi = action.payload
+        },
+        setWifiConnected(state, action: PayloadAction<LifelogHealth | null>) {
+            state.wifiConnected = action.payload
         },
     },
 })

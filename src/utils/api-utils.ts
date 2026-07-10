@@ -19,12 +19,19 @@ export function getLifelogApi(): string | null {
  * @param errorMessage
  */
 export async function lifelogGet(endpoint: string, errorMessage?: string): Promise<Response | null> {
-    const response = await fetch(`${getLifelogApi()}/${endpoint}`)
+    try {
+        const response = await fetch(`${getLifelogApi()}/${endpoint}`)
 
-    if (!response.ok) {
-        console.error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
+        if (!response.ok) {
+            console.error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
+
+            return null
+        }
+
+        return response
+    } catch (error) {
+        console.error(errorMessage ?? 'Failed to reach lifelog api', error)
+
         return null
     }
-
-    return response
 }
