@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
-import { getLifelogHealth } from '@/services/lifelog-service'
+import { getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
