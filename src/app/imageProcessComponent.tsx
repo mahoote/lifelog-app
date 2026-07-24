@@ -37,6 +37,8 @@ export default function ImageProcessComponent() {
 
     /**
      * Downloads all pending footage from the lifelog api.
+     * Calculates the total pending footage items and updates the downloadedFootage state
+     * for every downloaded captureEvent.
      */
     const handleDownloadFootage = async () => {
         setProcessLoading(true)
@@ -44,7 +46,14 @@ export default function ImageProcessComponent() {
         const captureEvents = await getLifelogPendingFootage()
 
         if (captureEvents.length) {
-            dispatch(downloadActions.setPendingFootage(captureEvents.length))
+            const pendingFootageCount = captureEvents.reduce(
+                (total, event) => total + (event.footageItems?.length ?? 0),
+                0,
+            )
+
+            dispatch(downloadActions.setPendingFootage(pendingFootageCount))
+            dispatch(downloadActions.setDownloadedFootage(0))
+
             const downloaded = await downloadCaptureEventsFootage(
                 captureEvents,
                 dispatch,
@@ -64,8 +73,8 @@ export default function ImageProcessComponent() {
 
     return (
         <>
-            <View className="gap-6 p-2">
-                <View className="gap-4">
+            <View className="gap-6 p-2 pb-8 flex-1">
+                <View className="gap-4 flex-1">
                     <View className="gap-2">
                         <Text className="text-xl">Glasses</Text>
                         <Text>Status: {displayStatus}</Text>
@@ -82,18 +91,20 @@ export default function ImageProcessComponent() {
                         />
                     </View>
                     {wifiConnected && (
-                        <View className="gap-2">
-                            <Text className="text-xl">Actions</Text>
-                            <AppButton
-                                title="Process footage"
-                                onPress={() => void handleDownloadFootage()}
-                                loading={processLoading}
-                            />
-                            {pendingFootage > 0 && (
-                                <Text>
-                                    Downloaded {downloadedFootage} of {pendingFootage} footage
-                                </Text>
-                            )}
+                        <View className="gap-2 justify-between flex-1">
+                            <View className="gap-2">
+                                <Text className="text-xl">Actions</Text>
+                                <AppButton
+                                    title="Process footage"
+                                    onPress={() => void handleDownloadFootage()}
+                                    loading={processLoading}
+                                />
+                                {pendingFootage > 0 && (
+                                    <Text>
+                                        Downloaded {downloadedFootage} of {pendingFootage} footage
+                                    </Text>
+                                )}
+                            </View>
                             <AppButton
                                 title="Delete all footage"
                                 onPress={() => void deleteAllSavedFootage()}
