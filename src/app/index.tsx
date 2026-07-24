@@ -4,6 +4,7 @@ import { AppButton } from '@/components/appButton'
 import { getLifelogPendingFootage, getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
 
 /**
  * Connection settings for the app and glasses.
@@ -34,11 +35,11 @@ export default function Index() {
     const handleProcessFootage = async () => {
         setProcessLoading(true)
 
-        const footage = await getLifelogPendingFootage()
+        const captureEvents = await getLifelogPendingFootage()
 
-        if (footage.length) {
-            setPendingAmount(footage.length)
-            // TODO: download footage
+        if (captureEvents.length) {
+            setPendingAmount(captureEvents.length)
+            await downloadCaptureEventsFootage(captureEvents)
         }
 
         setProcessLoading(false)
