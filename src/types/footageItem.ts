@@ -33,6 +33,24 @@ export interface FootageItemResponse {
     acked_at: string | null
 }
 
+export interface FootageItemRow {
+    id: string | null
+    capture_event_id: string | null
+    sequence_index: number
+    type: FootageType
+    role: FootageRole
+    created_at: string
+    file_uri: string
+    size_bytes: number
+    state: FootageState
+    duration_s: number | null
+    imported_at: string | null
+    day_key: string | null
+    is_favorite: boolean
+    notes: string | null
+    tags_json: string | null
+}
+
 export interface FootageItem {
     id: string | null
     captureEventId: string | null
@@ -40,12 +58,13 @@ export interface FootageItem {
     type: FootageType
     role: FootageRole
     createdAt: string
-    filePath: string
+    fileUri: string
     sizeBytes: number
     state: FootageState
-    attempt: number
-    lastAttemptAt: string | null
-    lastError: string | null
     durationS: number | null
-    ackedAt: string | null
+    importedAt: string | null
+    dayKey: string | null
+    isFavorite: boolean
+    notes: string | null
+    tagsJson: string | null
 }

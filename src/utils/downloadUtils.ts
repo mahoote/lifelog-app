@@ -71,7 +71,7 @@ export async function downloadCaptureEventFootage(
             footageItem.id,
             footageItem.sizeBytes,
             footageItem.type,
-            footageItem.filePath,
+            footageItem.fileUri,
         )
 
         results.push({

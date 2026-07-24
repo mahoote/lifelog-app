@@ -12,13 +12,15 @@ export function mapFootageItem(response: FootageItemResponse): FootageItem {
         type: response.type,
         role: response.role,
         createdAt: response.created_at,
-        filePath: response.file_path,
+        fileUri: response.file_path,
         sizeBytes: response.size_bytes,
         state: response.state,
-        attempt: response.attempt,
-        lastAttemptAt: response.last_attempt_at,
-        lastError: response.last_error,
         durationS: response.duration_s,
-        ackedAt: response.acked_at,
+
+        importedAt: null,
+        dayKey: null,
+        isFavorite: false,
+        notes: null,
+        tagsJson: null,
     }
 }

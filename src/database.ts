@@ -24,7 +24,6 @@ export function initDatabase() {
             size_bytes INTEGER NOT NULL,
             state TEXT NOT NULL,
             duration_s INTEGER,
-            acked_at TEXT,
 
             imported_at TEXT NOT NULL,
             day_key TEXT,

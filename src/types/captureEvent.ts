@@ -14,6 +14,13 @@ export interface CaptureEventResponse {
     footage_items: FootageItemResponse[] | null
 }
 
+export interface CaptureEventRow {
+    id: string | null
+    started_at: string
+    ended_at: string
+    motion_state: MotionState
+}
+
 export interface CaptureEvent {
     id: string | null
     startedAt: string
