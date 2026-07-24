@@ -66,9 +66,11 @@ export async function downloadFootageById(
 
         const originalFileName = filePath.split('/').pop() ?? id
         const directory =
-            type === FootageType.VIDEO ? new Directory(Paths.document, 'videos') : Paths.document
+            type === FootageType.VIDEO
+                ? new Directory(Paths.document, 'videos')
+                : new Directory(Paths.document, 'images')
 
-        if (type === FootageType.VIDEO && !directory.exists) {
+        if (!directory.exists) {
             directory.create()
         }
 
@@ -76,11 +78,17 @@ export async function downloadFootageById(
 
         await File.downloadFileAsync(url, file)
 
+        const fileType = type === FootageType.VIDEO ? 'video' : 'image'
+        console.info(
+            `Downloaded ${fileType} ${originalFileName} to ${file.uri}`,
+            new Date().toISOString(),
+        )
+
         return { data: file.uri, continue: true }
     } catch (error) {
         console.error(`Failed to download footage ${id}:`, error)
 
         // "Continue" because could just be asking for non-existing footage.
-        return { data: null, continue: true }
+        return { data: null, continue: false }
     }
 }

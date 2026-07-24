@@ -25,7 +25,10 @@ export async function lifelogGet(
     errorMessage?: string,
 ): Promise<Response | null> {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    const timeout = setTimeout(() => {
+        console.warn(`Lifelog API request timed out after ${timeoutMs}ms: ${endpoint}`)
+        controller.abort()
+    }, timeoutMs)
 
     try {
         const response = await fetch(`${getLifelogApi()}/${endpoint}`, {

@@ -5,6 +5,7 @@ import { getLifelogPendingFootage, getLifelogHealth } from '@/services/lifelogSe
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
+import { deleteAllSavedFootage } from '@/utils/storageUtils'
 
 /**
  * Connection settings for the app and glasses.
@@ -32,14 +33,18 @@ export default function ImageProcessComponent() {
         setRefreshLoading(false)
     }
 
-    const handleProcessFootage = async () => {
+    /**
+     * Downloads all pending footage from the lifelog api.
+     */
+    const handleDownloadFootage = async () => {
         setProcessLoading(true)
 
         const captureEvents = await getLifelogPendingFootage()
 
         if (captureEvents.length) {
             setPendingAmount(captureEvents.length)
-            await downloadCaptureEventsFootage(captureEvents)
+            const downloaded = await downloadCaptureEventsFootage(captureEvents)
+            console.info(`Downloaded ${downloaded.length} capture events and their footage.`)
         }
 
         setProcessLoading(false)
@@ -75,10 +80,17 @@ export default function ImageProcessComponent() {
                             <Text className="text-xl">Actions</Text>
                             <AppButton
                                 title="Process footage"
-                                onPress={() => void handleProcessFootage()}
+                                onPress={() => void handleDownloadFootage()}
                                 loading={processLoading}
                             />
                             {pendingAmount > 0 && <Text>Pending footage: {pendingAmount}</Text>}
+                            <AppButton
+                                title="Delete all footage"
+                                onPress={() => void deleteAllSavedFootage()}
+                                loading={processLoading}
+                                hasLoadingText={false}
+                                color="red"
+                            />
                         </View>
                     )}
                 </View>
