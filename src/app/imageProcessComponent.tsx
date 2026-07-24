@@ -3,6 +3,7 @@ import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
 import { getLifelogPendingFootage, getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
+import { downloadActions } from '@/store/downloadSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
 import { deleteAllSavedFootage } from '@/utils/storageUtils'
@@ -15,11 +16,12 @@ import { deleteAllSavedFootage } from '@/utils/storageUtils'
 export default function ImageProcessComponent() {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
+    const pendingFootage = useAppSelector(state => state.download.pendingFootage)
+    const downloadedFootage = useAppSelector(state => state.download.downloadedFootage)
 
     const [displayStatus, setDisplayStatus] = useState('Not connected')
     const [refreshLoading, setRefreshLoading] = useState(false)
     const [processLoading, setProcessLoading] = useState(false)
-    const [pendingAmount, setPendingAmount] = useState(0)
 
     /**
      * Fetches the current health of the lifelog api.
@@ -42,8 +44,12 @@ export default function ImageProcessComponent() {
         const captureEvents = await getLifelogPendingFootage()
 
         if (captureEvents.length) {
-            setPendingAmount(captureEvents.length)
-            const downloaded = await downloadCaptureEventsFootage(captureEvents)
+            dispatch(downloadActions.setPendingFootage(captureEvents.length))
+            const downloaded = await downloadCaptureEventsFootage(
+                captureEvents,
+                dispatch,
+                downloadActions.addDownloadedFootage,
+            )
             console.info(`Downloaded ${downloaded.length} capture events and their footage.`)
         }
 
@@ -83,7 +89,11 @@ export default function ImageProcessComponent() {
                                 onPress={() => void handleDownloadFootage()}
                                 loading={processLoading}
                             />
-                            {pendingAmount > 0 && <Text>Pending footage: {pendingAmount}</Text>}
+                            {pendingFootage > 0 && (
+                                <Text>
+                                    Downloaded {downloadedFootage} of {pendingFootage} footage
+                                </Text>
+                            )}
                             <AppButton
                                 title="Delete all footage"
                                 onPress={() => void deleteAllSavedFootage()}

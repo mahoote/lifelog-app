@@ -75,14 +75,7 @@ export async function downloadFootageById(
         }
 
         const file = new File(directory, originalFileName)
-
         await File.downloadFileAsync(url, file)
-
-        const fileType = type === FootageType.VIDEO ? 'video' : 'image'
-        console.info(
-            `Downloaded ${fileType} ${originalFileName} to ${file.uri}`,
-            new Date().toISOString(),
-        )
 
         return { data: file.uri, continue: true }
     } catch (error) {

@@ -1,12 +1,20 @@
+import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
 import { downloadFootageById } from '@/services/lifelogService'
+import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
 
 /**
  * Downloads all the capture events and their footage items.
  * Breaks if "continue" is false.
  * @param captureEvents
+ * @param dispatch
+ * @param addDownloadedFootage
  */
-export async function downloadCaptureEventsFootage(captureEvents: CaptureEvent[]): Promise<
+export async function downloadCaptureEventsFootage(
+    captureEvents: CaptureEvent[],
+    dispatch: AppDispatch,
+    addDownloadedFootage: ActionCreatorWithPayload<number, 'download/addDownloadedFootage'>,
+): Promise<
     {
         captureEventId: string | null
         downloads: { id: string | null; data: string | null; continue: boolean }[]
@@ -16,6 +24,8 @@ export async function downloadCaptureEventsFootage(captureEvents: CaptureEvent[]
 
     for (const captureEvent of captureEvents) {
         const downloads = await downloadCaptureEventFootage(captureEvent)
+
+        dispatch(addDownloadedFootage(downloads.length))
 
         results.push({
             captureEventId: captureEvent.id,
