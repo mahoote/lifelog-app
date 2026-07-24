@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Text, View } from 'react-native'
 import { AppButton } from '@/components/appButton'
-import { getLifelogFootage, getLifelogHealth } from '@/services/lifelogService'
+import { getLifelogPendingFootage, getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
@@ -34,7 +34,7 @@ export default function Index() {
     const handleProcessFootage = async () => {
         setProcessLoading(true)
 
-        const footage = await getLifelogFootage()
+        const footage = await getLifelogPendingFootage()
 
         if (footage.length) {
             setPendingAmount(footage.length)
