@@ -49,7 +49,7 @@ export async function downloadFootageById(
     sizeBytes: number,
     type: FootageType,
     filePath: string,
-): Promise<{ data: string | null; continue: boolean }> {
+): Promise<{ uri: string | null; continue: boolean }> {
     try {
         const usedBytes = getUsedFootageStorageBytes()
 
@@ -58,7 +58,7 @@ export async function downloadFootageById(
                 `Not enough storage to download footage ${id}. Used: ${usedBytes}, Size: ${sizeBytes}, Max: ${config.MAX_STORAGE_BYTES}`,
             )
 
-            return { data: null, continue: false }
+            return { uri: null, continue: false }
         }
 
         const BASE_URL = getLifelogApi()
@@ -77,11 +77,11 @@ export async function downloadFootageById(
         const file = new File(directory, originalFileName)
         await File.downloadFileAsync(url, file)
 
-        return { data: file.uri, continue: true }
+        return { uri: file.uri, continue: true }
     } catch (error) {
         console.error(`Failed to download footage ${id}:`, error)
 
         // "Continue" because could just be asking for non-existing footage.
-        return { data: null, continue: false }
+        return { uri: null, continue: false }
     }
 }

@@ -1,7 +1,7 @@
 import { db } from '@/database'
 import { CaptureEvent } from '@/types/captureEvent'
 
-export function saveCaptureEvent(captureEvent: CaptureEvent) {
+export function saveCaptureEvent(captureEvent: CaptureEvent, downloads: { id: string; uri: string }[]) {
     try {
         if (!captureEvent.id) {
             throw new Error('Cannot save capture event without id')
@@ -30,6 +30,13 @@ export function saveCaptureEvent(captureEvent: CaptureEvent) {
                     continue
                 }
 
+                const footageUri = downloads.find(download => download.id === footageItem.id)?.uri
+
+                if (!footageUri) {
+                    console.warn(`Footage item ${footageItem.id} not found in downloads. Skipping.`)
+                    continue
+                }
+
                 db.runSync(
                     `
                     INSERT OR REPLACE INTO footage_item (
@@ -54,7 +61,7 @@ export function saveCaptureEvent(captureEvent: CaptureEvent) {
                         footageItem.type,
                         footageItem.role,
                         footageItem.createdAt,
-                        footageItem.filePath,
+                        footageUri,
                         footageItem.sizeBytes,
                         footageItem.state,
                         footageItem.durationS,

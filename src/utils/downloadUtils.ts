@@ -1,4 +1,5 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
+import { saveCaptureEvent } from '@/repositories/lifelogRepository'
 import { downloadFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
@@ -17,7 +18,7 @@ export async function downloadCaptureEventsFootage(
 ): Promise<
     {
         captureEventId: string | null
-        downloads: { id: string | null; data: string | null; continue: boolean }[]
+        downloads: { id: string | null; uri: string | null; continue: boolean }[]
     }[]
 > {
     const results = []
@@ -26,6 +27,11 @@ export async function downloadCaptureEventsFootage(
         const downloads = await downloadCaptureEventFootage(captureEvent)
 
         dispatch(addDownloadedFootage(downloads.length))
+
+        saveCaptureEvent(
+            captureEvent,
+            downloads.filter(download => download.uri !== null) as { id: string; uri: string }[],
+        )
 
         results.push({
             captureEventId: captureEvent.id,
@@ -49,7 +55,7 @@ export async function downloadCaptureEventsFootage(
  */
 export async function downloadCaptureEventFootage(
     captureEvent: CaptureEvent,
-): Promise<{ id: string | null; data: string | null; continue: boolean }[]> {
+): Promise<{ id: string | null; uri: string | null; continue: boolean }[]> {
     if (!captureEvent.footageItems) {
         return []
     }
