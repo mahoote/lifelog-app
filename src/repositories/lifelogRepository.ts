@@ -2,10 +2,16 @@ import { db } from '@/database'
 import { CaptureEvent, CaptureEventRow } from '@/types/captureEvent'
 import { FootageItem, FootageItemRow } from '@/types/footageItem'
 
-export function saveCaptureEvent(captureEvent: CaptureEvent, downloads: { id: string; uri: string }[]) {
+export function saveCaptureEvent(
+    captureEvent: CaptureEvent,
+    downloads: { id: string; uri: string }[],
+): { success: boolean; error: Error | null } {
     try {
         if (!captureEvent.id) {
-            throw new Error('Cannot save capture event without id')
+            return {
+                success: false,
+                error: new Error('Cannot save capture event without id'),
+            }
         }
 
         db.withTransactionSync(() => {
@@ -80,7 +86,7 @@ export function saveCaptureEvent(captureEvent: CaptureEvent, downloads: { id: st
 
         return {
             success: false,
-            error,
+            error: error as Error,
         }
     }
 }

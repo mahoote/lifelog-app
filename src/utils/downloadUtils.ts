@@ -28,10 +28,14 @@ export async function downloadCaptureEventsFootage(
 
         dispatch(addDownloadedFootage(downloads.length))
 
-        saveCaptureEvent(
+        const result = saveCaptureEvent(
             captureEvent,
             downloads.filter(download => download.uri !== null) as { id: string; uri: string }[],
         )
+
+        if (!result.success || result.error) {
+            console.error(`Save to db success: ${result.success}, Error: ${result.error}`)
+        }
 
         results.push({
             captureEventId: captureEvent.id,
