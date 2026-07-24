@@ -16,11 +16,21 @@ export function getLifelogApi(): string | null {
 /**
  * A generalised function for fetching a GET endpoint for the lifelog api.
  * @param endpoint
+ * @param timeoutMs
  * @param errorMessage
  */
-export async function lifelogGet(endpoint: string, errorMessage?: string): Promise<Response | null> {
+export async function lifelogGet(
+    endpoint: string,
+    timeoutMs = 10_000,
+    errorMessage?: string,
+): Promise<Response | null> {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+
     try {
-        const response = await fetch(`${getLifelogApi()}/${endpoint}`)
+        const response = await fetch(`${getLifelogApi()}/${endpoint}`, {
+            signal: controller.signal,
+        })
 
         if (!response.ok) {
             console.error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
@@ -31,8 +41,11 @@ export async function lifelogGet(endpoint: string, errorMessage?: string): Promi
         return response
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
+
         console.warn(errorMessage ?? 'Failed to reach lifelog api', message)
 
         return null
+    } finally {
+        clearTimeout(timeout)
     }
 }
