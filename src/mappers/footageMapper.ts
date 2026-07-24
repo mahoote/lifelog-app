@@ -1,22 +1,26 @@
-import { FootageItem, FootageItemResponse } from '@/types/footage'
+import { FootageItem, FootageItemResponse } from '@/types/footageItem'
 
 /**
  * Maps the FootageItemResponse from the API to the FootageItem used in the app.
- * @param footage
+ * @param response
  */
-export function mapFootageItem(footage: FootageItemResponse): FootageItem {
+export function mapFootageItem(response: FootageItemResponse): FootageItem {
     return {
-        id: footage.id,
-        type: footage.type,
-        createdAt: footage.created_at,
-        sizeBytes: footage.size_bytes,
-        motionState: footage.motion_state,
-        importedAt: new Date().toISOString(),
-        dayKey: footage.created_at.split('T')[0],
-        duration: footage.duration_s,
+        id: response.id,
+        captureEventId: response.capture_event_id,
+        sequenceIndex: response.sequence_index,
+        type: response.type,
+        role: response.role,
+        createdAt: response.created_at,
+        fileUri: response.file_path,
+        sizeBytes: response.size_bytes,
+        state: response.state,
+        durationS: response.duration_s,
+
+        importedAt: null,
+        dayKey: null,
         isFavorite: false,
-        fileUri: null,
         notes: null,
-        tags: null,
+        tagsJson: null,
     }
 }

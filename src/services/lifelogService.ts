@@ -1,6 +1,8 @@
-import { File, Paths } from 'expo-file-system'
+import { Directory, File, Paths } from 'expo-file-system'
 import { config } from '@/config'
-import { FootageItem, FootageType } from '@/types/footage'
+import { mapCaptureEvent } from '@/mappers/captureEventMapper'
+import { CaptureEvent, CaptureEventResponse } from '@/types/captureEvent'
+import { FootageType } from '@/types/footageItem'
 import { LifelogHealth } from '@/types/lifelog'
 import { getLifelogApi, lifelogGet } from '@/utils/apiUtils'
 import { getUsedFootageStorageBytes } from '@/utils/storageUtils'
@@ -9,7 +11,7 @@ import { getUsedFootageStorageBytes } from '@/utils/storageUtils'
  * Fetches the current state of the lifelog api.
  */
 export async function getLifelogHealth(): Promise<LifelogHealth | null> {
-    const response = await lifelogGet('health')
+    const response = await lifelogGet('health', 5_000)
 
     if (!response) return null
 
@@ -18,29 +20,36 @@ export async function getLifelogHealth(): Promise<LifelogHealth | null> {
 
 /**
  * Fetches all the pending footage from the lifelog api.
+ * Receives the CaptureEventResponse and maps it to the CaptureEvent used in the app.
+ * @return An array of CaptureEvent objects.
  */
-export async function getLifelogFootage(): Promise<FootageItem[]> {
+export async function getLifelogPendingFootage(): Promise<CaptureEvent[]> {
     const response = await lifelogGet('footage')
 
     if (!response) return []
 
-    return (await response.json()) as FootageItem[]
+    const captureEvents = (await response.json()) as CaptureEventResponse[]
+
+    return captureEvents.map(mapCaptureEvent)
 }
 
 /**
  * Downloads the footage file from the lifelog api by its id.
  * Stored inside private document directory on the phone.
+ * If the file is a video, it's stored within the "videos" folder.
  * @param id - The id of the footage file to download.
  * @param sizeBytes - The size of the footage file in bytes.
  *                    Used to check if there is enough free storage before downloading.
- * @param type - Video or photo footage type. Used to determine the file extension.
+ * @param type - Video or photo footage type. Used to determine the folder location.
+ * @param filePath - Uses the original filename to save the new file.
  * @return The file uri of the downloaded footage.
  */
 export async function downloadFootageById(
     id: string,
     sizeBytes: number,
     type: FootageType,
-): Promise<{ data: string | null; continue: boolean }> {
+    filePath: string,
+): Promise<{ uri: string | null; continue: boolean }> {
     try {
         const usedBytes = getUsedFootageStorageBytes()
 
@@ -48,22 +57,31 @@ export async function downloadFootageById(
             console.error(
                 `Not enough storage to download footage ${id}. Used: ${usedBytes}, Size: ${sizeBytes}, Max: ${config.MAX_STORAGE_BYTES}`,
             )
-            return { data: null, continue: false }
+
+            return { uri: null, continue: false }
         }
 
         const BASE_URL = getLifelogApi()
         const url = `${BASE_URL}/footage/${id}`
 
-        const fileExtension = type === FootageType.VIDEO ? 'mp4' : 'jpg'
+        const originalFileName = filePath.split('/').pop() ?? id
+        const directory =
+            type === FootageType.VIDEO
+                ? new Directory(Paths.document, 'videos')
+                : new Directory(Paths.document, 'images')
 
-        const file = new File(Paths.document, `${id}.${fileExtension}`)
+        if (!directory.exists) {
+            directory.create()
+        }
 
+        const file = new File(directory, originalFileName)
         await File.downloadFileAsync(url, file)
 
-        return { data: file.uri, continue: true }
+        return { uri: file.uri, continue: true }
     } catch (error) {
         console.error(`Failed to download footage ${id}:`, error)
+
         // "Continue" because could just be asking for non-existing footage.
-        return { data: null, continue: true }
+        return { uri: null, continue: false }
     }
 }
