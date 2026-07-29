@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -23,6 +23,12 @@ interface DateOption {
     label: string
     day: number
     month: string
+}
+
+const speedSeconds: Record<SlideSpeed, number> = {
+    slow: 20,
+    medium: 10,
+    fast: 5,
 }
 
 const dateOptions: DateOption[] = [
@@ -59,7 +65,7 @@ const entries: DiaryEntry[] = [
 export default function DiaryScreen() {
     const [selectedDate, setSelectedDate] = useState('today')
     const [currentIndex, setCurrentIndex] = useState(0)
-    const [isPlaying, setIsPlaying] = useState(false)
+    const [isPlaying, setIsPlaying] = useState(true)
     const [speed, setSpeed] = useState<SlideSpeed>('medium')
 
     const currentEntry = entries[currentIndex]
@@ -71,6 +77,16 @@ export default function DiaryScreen() {
     const handleNext = () => {
         setCurrentIndex(i => (i < entries.length - 1 ? i + 1 : 0))
     }
+
+    useEffect(() => {
+        if (!isPlaying) return
+
+        const interval = setInterval(() => {
+            setCurrentIndex(i => (i < entries.length - 1 ? i + 1 : 0))
+        }, speedSeconds[speed] * 1000)
+
+        return () => clearInterval(interval)
+    }, [isPlaying, speed])
 
     return (
         <SafeAreaView className="flex-1 bg-surface">
