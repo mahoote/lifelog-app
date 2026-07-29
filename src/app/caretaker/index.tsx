@@ -80,7 +80,7 @@ export default function CaretakerScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-8 pt-2">
-                    <AppHeader />
+                    <AppHeader title="Caretaker" />
                 </View>
 
                 <View className="mt-6 px-8">

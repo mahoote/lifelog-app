@@ -11,11 +11,12 @@ import { downloadActions } from '@/store/downloadSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 interface Props {
+    title: string
     variant?: 'default' | 'settings'
     onBackPress?: () => void
 }
 
-export default function AppHeader({ variant = 'default', onBackPress }: Props) {
+export default function AppHeader({ title, variant = 'default', onBackPress }: Props) {
     const router = useRouter()
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
@@ -62,7 +63,7 @@ export default function AppHeader({ variant = 'default', onBackPress }: Props) {
 
     return (
         <View className="flex-row items-center justify-between">
-            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">LIFELOG</Text>
+            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">{title}</Text>
 
             <View className="flex-row items-center gap-4">
                 {wifiConnected && (
