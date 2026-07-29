@@ -48,6 +48,7 @@ export default function RootLayout() {
                 >
                     <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
                     <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+                    <Stack.Screen name="caretaker/index" options={{ title: 'Caretaker' }} />
                 </Stack>
             </Provider>
         </GestureHandlerRootView>
