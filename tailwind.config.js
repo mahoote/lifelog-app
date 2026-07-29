@@ -63,6 +63,9 @@ module.exports = {
             },
             fontFamily: {
                 atkinson: ['Atkinson Hyperlegible Next'],
+                'atkinson-medium': ['Atkinson Hyperlegible Next Medium'],
+                'atkinson-semibold': ['Atkinson Hyperlegible Next SemiBold'],
+                'atkinson-bold': ['Atkinson Hyperlegible Next Bold'],
             },
             fontSize: {
                 'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.01em' }],
