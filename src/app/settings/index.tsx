@@ -24,7 +24,7 @@ export default function SettingsScreen() {
                     <AppHeader
                         title="Settings"
                         variant="settings"
-                        onBackPress={() => router.push('/caretaker')}
+                        onBackPress={() => router.push('/diary')}
                     />
                     <DeviceStatusCard />
                     <RoleSelector selectedRole={selectedRole} onSelectRole={setSelectedRole} />
