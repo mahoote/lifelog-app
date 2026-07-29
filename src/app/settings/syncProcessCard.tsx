@@ -2,6 +2,7 @@ import { faArrowsRotate, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
+import { deleteAllSavedFootage } from '@/utils/storageUtils'
 
 export default function SyncProcessCard() {
     return (
@@ -27,6 +28,7 @@ export default function SyncProcessCard() {
                 accessibilityRole="button"
                 accessibilityLabel="Delete all data"
                 className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
+                onPress={() => void deleteAllSavedFootage()}
             >
                 <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
                 <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
