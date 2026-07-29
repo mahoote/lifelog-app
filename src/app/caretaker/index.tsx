@@ -1,15 +1,17 @@
 import {
     faArrowDownWideShort,
     faCalendar,
-    faCheckCircle,
     faChevronDown,
-    faExclamationCircle,
+    faImage,
     faRotate,
+    faVideo,
     faWandMagicSparkles,
+    IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
 import { Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import AppHeader from '@/components/appHeader'
@@ -27,14 +29,14 @@ interface MediaItem {
     overflow?: number
 }
 
-const todayItems: MediaItem[] = [
+const morningItems: MediaItem[] = [
     { id: '1', time: '09:15 AM', badge: 'verified', uri: 'https://picsum.photos/seed/a1/200/200' },
     { id: '2', time: '10:30 AM', badge: 'flagged', uri: 'https://picsum.photos/seed/a2/200/200' },
     { id: '3', time: '11:00 AM', badge: 'none', uri: 'https://picsum.photos/seed/a3/200/200' },
     { id: '4', time: '', badge: 'processing' },
 ]
 
-const yesterdayItems: MediaItem[] = [
+const afternoonItems: MediaItem[] = [
     { id: '5', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b1/200/200' },
     { id: '6', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b2/200/200' },
     { id: '7', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b3/200/200' },
@@ -82,11 +84,11 @@ export default function CaretakerScreen() {
                 </View>
 
                 <View className="mt-7 px-8">
-                    <ImageSection title="Today" items={todayItems} />
+                    <ImageSection title="Morning" items={morningItems} />
                 </View>
 
                 <View className="mt-8 px-8">
-                    <ImageSection title="Yesterday" items={yesterdayItems} />
+                    <ImageSection title="Afternoon" items={afternoonItems} />
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -107,13 +109,13 @@ function MediaTabBar({ activeTab, onTabChange }: MediaTabBarProps) {
         <View className="flex-row rounded-full bg-surface-container-high p-1">
             <TabPill
                 label="Images"
-                icon="🖼"
+                icon={faImage}
                 active={activeTab === 'images'}
                 onPress={() => onTabChange('images')}
             />
             <TabPill
                 label="Videos"
-                icon="📹"
+                icon={faVideo}
                 active={activeTab === 'videos'}
                 onPress={() => onTabChange('videos')}
             />
@@ -123,7 +125,7 @@ function MediaTabBar({ activeTab, onTabChange }: MediaTabBarProps) {
 
 interface TabPillProps {
     label: string
-    icon: string
+    icon: IconDefinition
     active: boolean
     onPress: () => void
 }
@@ -138,10 +140,14 @@ function TabPill({ label, icon, active, onPress }: TabPillProps) {
                 active ? 'bg-surface shadow-soft' : 'bg-transparent'
             }`}
         >
-            <Text className="text-[16px] leading-[18px]">{icon}</Text>
+            <FontAwesomeIcon
+                icon={icon}
+                size={16}
+                color={active ? colors.primary : colors.onSurfaceVariant}
+            />
             <Text
                 className={`font-atkinson-semibold text-[16px] ${
-                    active ? 'text-on-surface' : 'text-on-surface-variant'
+                    active ? 'text-primary' : 'text-on-surface-variant'
                 }`}
             >
                 {label}
@@ -161,10 +167,10 @@ function SyncStatusBar() {
                 <View className="h-2.5 w-2.5 rounded-full bg-primary" />
                 <View>
                     <Text className="font-atkinson-bold text-[16px] leading-[20px] text-on-primary-fixed">
-                        24 New Items
+                        239 New Items
                     </Text>
                     <Text className="font-atkinson text-[14px] leading-[18px] text-on-primary-fixed-variant">
-                        Syncing...
+                        Processed: 54
                     </Text>
                 </View>
             </View>
@@ -261,6 +267,10 @@ interface ImageSectionProps {
 }
 
 function ImageSection({ title, items }: ImageSectionProps) {
+    const { width } = useWindowDimensions()
+    // px-8 = 32px each side, gap-2 = 8px between tiles, 2 gaps for 3 columns
+    const tileSize = (width - 64 - 16) / 3
+
     const rows: MediaItem[][] = []
     for (let i = 0; i < items.length; i += 3) {
         rows.push(items.slice(i, i + 3))
@@ -276,7 +286,7 @@ function ImageSection({ title, items }: ImageSectionProps) {
                 {rows.map((row, rowIndex) => (
                     <View key={rowIndex} className="flex-row gap-2">
                         {row.map(item => (
-                            <ImageTile key={item.id} item={item} />
+                            <ImageTile key={item.id} item={item} size={tileSize} />
                         ))}
                     </View>
                 ))}
@@ -291,15 +301,19 @@ function ImageSection({ title, items }: ImageSectionProps) {
 
 interface ImageTileProps {
     item: MediaItem
+    size: number
 }
 
-function ImageTile({ item }: ImageTileProps) {
+function ImageTile({ item, size }: ImageTileProps) {
+    const tileStyle = { width: size, height: size }
+
     if (item.overflow !== undefined) {
         return (
             <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Show ${item.overflow} more items`}
-                className="aspect-square flex-1 items-center justify-center rounded-lg bg-surface-container-high active:opacity-80"
+                style={tileStyle}
+                className="items-center justify-center rounded-lg bg-surface-container-high active:opacity-80"
             >
                 <Text className="font-atkinson-bold text-[20px] text-on-surface-variant">
                     +{item.overflow}
@@ -310,9 +324,12 @@ function ImageTile({ item }: ImageTileProps) {
 
     if (item.badge === 'processing') {
         return (
-            <View className="aspect-square flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-outline-variant bg-surface-container">
-                <FontAwesomeIcon icon={faRotate} size={28} color={colors.primary} />
-                <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
+            <View
+                style={tileStyle}
+                className="items-center justify-center gap-2 rounded-lg border-2 border-dashed border-outline-variant bg-surface-container"
+            >
+                <FontAwesomeIcon icon={faRotate} size={20} color={colors.primary} />
+                <Text className="font-atkinson-medium text-[12px] text-on-surface-variant">
                     Processing...
                 </Text>
             </View>
@@ -323,7 +340,8 @@ function ImageTile({ item }: ImageTileProps) {
         <Pressable
             accessibilityRole="imagebutton"
             accessibilityLabel={item.time ? `Memory at ${item.time}` : 'Memory image'}
-            className="aspect-square flex-1 overflow-hidden rounded-lg active:opacity-90"
+            style={tileStyle}
+            className="overflow-hidden rounded-lg active:opacity-90"
         >
             {item.uri ? (
                 <Image source={{ uri: item.uri }} className="h-full w-full" resizeMode="cover" />
@@ -331,16 +349,7 @@ function ImageTile({ item }: ImageTileProps) {
                 <View className="h-full w-full bg-surface-container-high" />
             )}
 
-            <View className="absolute inset-0 justify-between p-2">
-                <View className="items-end">
-                    {item.badge === 'verified' && (
-                        <FontAwesomeIcon icon={faCheckCircle} size={18} color={colors.onPrimary} />
-                    )}
-                    {item.badge === 'flagged' && (
-                        <FontAwesomeIcon icon={faExclamationCircle} size={18} color={colors.onPrimary} />
-                    )}
-                </View>
-
+            <View className="absolute inset-0 justify-end p-2">
                 {item.time ? (
                     <View className="self-start rounded-md bg-black/50 px-2 py-1">
                         <Text className="font-atkinson-semibold text-[13px] text-white">
