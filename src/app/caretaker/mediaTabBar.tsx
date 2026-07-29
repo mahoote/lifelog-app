@@ -1,27 +1,32 @@
 import { faImage, faVideo } from '@fortawesome/free-solid-svg-icons'
+import { Dispatch, SetStateAction } from 'react'
 import { View } from 'react-native'
 import TabPill from '@/components/tabPill'
 import { MediaTab } from '@/types/media'
 
 interface Props {
     activeTab: MediaTab
-    onTabChange: (tab: MediaTab) => void
+    onTabPress: Dispatch<SetStateAction<MediaTab>>
 }
 
-export default function MediaTabBar({ activeTab, onTabChange }: Props) {
+export default function MediaTabBar({ activeTab, onTabPress }: Props) {
     return (
         <View className="flex-row rounded-full bg-surface-container-high p-1">
             <TabPill
                 label="Images"
                 icon={faImage}
-                active={activeTab === 'images'}
-                onPress={() => onTabChange('images')}
+                isActive={activeTab === 'images'}
+                onPress={() => {
+                    onTabPress('images')
+                }}
             />
             <TabPill
                 label="Videos"
                 icon={faVideo}
-                active={activeTab === 'videos'}
-                onPress={() => onTabChange('videos')}
+                isActive={activeTab === 'videos'}
+                onPress={() => {
+                    onTabPress('videos')
+                }}
             />
         </View>
     )
