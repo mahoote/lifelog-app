@@ -1,7 +1,7 @@
-import { faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, Text, TouchableOpacity, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { getLifelogHealth, getLifelogPendingFootage } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
@@ -49,9 +49,7 @@ export default function SettingsHeader() {
 
     return (
         <View className="flex-row items-start justify-between">
-            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">
-                MEMORY{'\n'}SUPPORT
-            </Text>
+            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">LIFELOG</Text>
 
             <View className="flex-row items-center gap-4">
                 {wifiConnected && (
@@ -69,13 +67,20 @@ export default function SettingsHeader() {
                     </Pressable>
                 )}
 
-                <Pressable
+                {/*<Pressable*/}
+                {/*    accessibilityRole="button"*/}
+                {/*    accessibilityLabel="Open settings"*/}
+                {/*    className="h-11 w-11 items-center justify-center active:opacity-70"*/}
+                {/*>*/}
+                {/*    <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />*/}
+                {/*</Pressable>*/}
+                <TouchableOpacity
+                    activeOpacity={0.6}
                     accessibilityRole="button"
-                    accessibilityLabel="Open settings"
-                    className="h-11 w-11 items-center justify-center active:opacity-70"
+                    accessibilityLabel="Go back"
                 >
-                    <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />
-                </Pressable>
+                    <Text className="font-atkinson-semibold text-[16px] text-primary">Go Back</Text>
+                </TouchableOpacity>
             </View>
         </View>
     )
