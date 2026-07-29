@@ -1,5 +1,5 @@
-import ImageProcessComponent from '@/app/imageProcessComponent'
+import { Redirect } from 'expo-router'
 
 export default function Index() {
-    return <ImageProcessComponent />
+    return <Redirect href="/settings" />
 }
