@@ -1,6 +1,6 @@
 import { faImage, faVideo } from '@fortawesome/free-solid-svg-icons'
 import { View } from 'react-native'
-import TabPill from '@/app/caretaker/tabPill'
+import TabPill from '@/components/tabPill'
 import { MediaTab } from '@/types/media'
 
 interface Props {
