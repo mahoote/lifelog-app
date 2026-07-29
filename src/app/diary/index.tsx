@@ -65,7 +65,7 @@ const entries: DiaryEntry[] = [
 export default function DiaryScreen() {
     const [selectedDate, setSelectedDate] = useState('today')
     const [currentIndex, setCurrentIndex] = useState(0)
-    const [isPlaying, setIsPlaying] = useState(true)
+    const [isPlaying, setIsPlaying] = useState(false)
     const [speed, setSpeed] = useState<SlideSpeed>('medium')
 
     const currentEntry = entries[currentIndex]
