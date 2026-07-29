@@ -1,6 +1,20 @@
+import {
+    faGear,
+    faRotate,
+    faWifi,
+    faExclamation,
+    IconDefinition,
+    faUserGroup,
+    faUser,
+    faTrash,
+    faArrowsRotate,
+    faGlasses,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { colors } from '@/constants/colors'
 
 type Role = 'user' | 'caretaker'
 
@@ -8,7 +22,7 @@ interface RoleOption {
     id: Role
     title: string
     description: string
-    icon: string
+    icon: IconDefinition
 }
 
 const roleOptions: RoleOption[] = [
@@ -16,13 +30,13 @@ const roleOptions: RoleOption[] = [
         id: 'user',
         title: 'User',
         description: 'A simple photo diary of your day.',
-        icon: '👤',
+        icon: faUser,
     },
     {
         id: 'caretaker',
         title: 'Caretaker',
         description: 'Access all recorded media and tools.',
-        icon: '👥',
+        icon: faUserGroup,
     },
 ]
 
@@ -61,18 +75,18 @@ function SettingsHeader() {
                 <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Sync memories"
-                    className="h-11 flex-row items-center justify-center rounded-full bg-primary-container px-4 active:bg-primary-fixed-dim"
+                    className="h-11 gap-2 flex-row items-center justify-center rounded-full bg-primary-container px-4 active:bg-primary-fixed-dim"
                 >
-                    <Text className="mr-2 font-atkinson-semibold text-[16px] text-primary">↺</Text>
+                    <FontAwesomeIcon icon={faRotate} size={12} color={colors.primary} />
                     <Text className="font-atkinson-semibold text-[16px] text-primary">Sync</Text>
                 </Pressable>
 
                 <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Open settings"
-                    className="h-11 w-8 items-center justify-center active:opacity-70"
+                    className="h-11 w-11 items-center justify-center active:opacity-70"
                 >
-                    <Text className="font-atkinson-bold text-[26px] leading-[28px] text-primary">⚙</Text>
+                    <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />
                 </Pressable>
             </View>
         </View>
@@ -82,15 +96,13 @@ function SettingsHeader() {
 function DeviceStatusCard() {
     return (
         <View className="rounded-lg bg-surface-container-high px-6 pb-6 pt-7">
-            <View className="mb-8 flex-row items-center justify-between">
-                <Text className="font-atkinson-bold text-[15px] uppercase tracking-[1.2px] text-secondary">
-                    Device Status
-                </Text>
+            <View className="mb-8 flex-row items-center">
+                {/*<Text className="font-atkinson-bold text-[15px] uppercase tracking-[1.2px] text-secondary">*/}
+                {/*    Device Status*/}
+                {/*</Text>*/}
 
-                <View className="flex-row items-center rounded-full bg-error-container px-3 py-2">
-                    <Text className="mr-2 font-atkinson-semibold text-[15px] text-on-error-container">
-                        ⌁
-                    </Text>
+                <View className="flex-row items-center rounded-full bg-error-container gap-1 px-3 py-2">
+                    <FontAwesomeIcon icon={faExclamation} size={12} color={colors.onErrorContainer} />
                     <Text className="font-atkinson-semibold text-[15px] text-on-error-container">
                         Not Connected
                     </Text>
@@ -99,11 +111,11 @@ function DeviceStatusCard() {
 
             <View className="items-center">
                 <View className="mb-6 h-20 w-20 items-center justify-center rounded-full bg-surface-dim">
-                    <Text className="text-[34px] leading-[40px] text-primary">👓</Text>
+                    <FontAwesomeIcon icon={faGlasses} size={30} color={colors.primary} />
                 </View>
 
                 <Text className="mb-2 text-center font-atkinson-bold text-[24px] leading-[30px] text-on-surface">
-                    Memory Glasses
+                    Lifelog Glasses
                 </Text>
 
                 <Text className="mb-5 max-w-[260px] text-center font-atkinson text-[18px] leading-[27px] text-on-surface-variant">
@@ -113,9 +125,9 @@ function DeviceStatusCard() {
                 <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Connect to Glasses WiFi"
-                    className="h-14 w-full flex-row items-center justify-center rounded-full bg-primary px-5 active:bg-on-primary-container"
+                    className="h-14 w-full flex-row gap-3 items-center justify-center rounded-full bg-primary px-5 active:bg-on-primary-container"
                 >
-                    <Text className="mr-3 text-[24px] leading-[26px] text-on-primary">≋</Text>
+                    <FontAwesomeIcon icon={faWifi} size={20} color={colors.onPrimary} />
                     <Text className="font-atkinson-bold text-[17px] text-on-primary">
                         Connect to Glasses WiFi
                     </Text>
@@ -174,7 +186,7 @@ function RoleCard({ role, selected, onPress }: RoleCardProps) {
                     selected ? 'bg-primary-container' : 'bg-surface-dim'
                 }`}
             >
-                <Text className="text-[20px] leading-[24px] text-primary">{role.icon}</Text>
+                <FontAwesomeIcon icon={role.icon} size={20} color={colors.onSurfaceVariant} />
             </View>
 
             <Text
@@ -201,7 +213,7 @@ function SyncProcessCard() {
         <View className="mt-6 rounded-lg bg-surface-container-low px-6 py-7">
             <View className="mb-5 flex-row items-center">
                 <View className="mr-4 h-12 w-12 items-center justify-center rounded-md bg-secondary-container">
-                    <Text className="text-[23px] leading-[26px] text-primary">⇆</Text>
+                    <FontAwesomeIcon icon={faArrowsRotate} size={20} color={colors.primary} />
                 </View>
 
                 <View className="flex-1">
@@ -209,10 +221,7 @@ function SyncProcessCard() {
                         Sync &amp; Process
                     </Text>
                     <Text className="mt-1 font-atkinson text-[17px] leading-[24px] text-on-surface-variant">
-                        Download and organize
-                    </Text>
-                    <Text className="font-atkinson text-[17px] leading-[24px] text-on-surface-variant">
-                        footage
+                        Download and organize footage
                     </Text>
                 </View>
             </View>
@@ -221,13 +230,11 @@ function SyncProcessCard() {
 
             <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Start syncing"
-                className="h-14 flex-row items-center justify-center rounded-full border-2 border-primary bg-surface active:bg-surface-container"
+                accessibilityLabel="Delete all data"
+                className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
             >
-                <Text className="mr-3 font-atkinson-bold text-[22px] leading-[24px] text-primary">
-                    ⇩
-                </Text>
-                <Text className="font-atkinson-bold text-[17px] text-primary">Start Syncing</Text>
+                <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
+                <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
             </Pressable>
         </View>
     )
