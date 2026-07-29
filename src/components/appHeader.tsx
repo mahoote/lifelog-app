@@ -1,5 +1,6 @@
 import { faArrowLeft, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 
@@ -10,12 +11,13 @@ import { downloadActions } from '@/store/downloadSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 interface Props {
+    title: string
     variant?: 'default' | 'settings'
-    onSettingsPress?: () => void
     onBackPress?: () => void
 }
 
-export default function AppHeader({ variant = 'default', onSettingsPress, onBackPress }: Props) {
+export default function AppHeader({ title, variant = 'default', onBackPress }: Props) {
+    const router = useRouter()
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
@@ -48,9 +50,20 @@ export default function AppHeader({ variant = 'default', onSettingsPress, onBack
         setSyncLoading(false)
     }
 
+    const handleButtonPress = () => {
+        switch (variant) {
+            case 'settings':
+                onBackPress?.()
+                break
+            default:
+                router.push('/settings')
+                break
+        }
+    }
+
     return (
-        <View className="flex-row items-start justify-between">
-            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">LIFELOG</Text>
+        <View className="flex-row items-center justify-between">
+            <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">{title}</Text>
 
             <View className="flex-row items-center gap-4">
                 {wifiConnected && (
@@ -82,7 +95,7 @@ export default function AppHeader({ variant = 'default', onSettingsPress, onBack
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Open settings"
-                        onPress={onSettingsPress}
+                        onPress={handleButtonPress}
                         className="h-11 w-11 items-center justify-center active:opacity-70"
                     >
                         <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />

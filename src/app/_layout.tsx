@@ -47,7 +47,18 @@ export default function RootLayout() {
                     }}
                 >
                     <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
-                    <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+                    <Stack.Screen
+                        name="settings/index"
+                        options={{ title: 'Settings', animation: 'ios_from_right' }}
+                    />
+                    <Stack.Screen
+                        name="caretaker/index"
+                        options={{ title: 'Caretaker', animation: 'ios_from_left' }}
+                    />
+                    <Stack.Screen
+                        name="diary/index"
+                        options={{ title: 'Diary', animation: 'ios_from_left' }}
+                    />
                 </Stack>
             </Provider>
         </GestureHandlerRootView>

@@ -21,7 +21,11 @@ export default function SettingsScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="gap-8">
-                    <AppHeader variant="settings" onBackPress={() => router.back()} />
+                    <AppHeader
+                        title="Settings"
+                        variant="settings"
+                        onBackPress={() => router.push('/diary')}
+                    />
                     <DeviceStatusCard />
                     <RoleSelector selectedRole={selectedRole} onSelectRole={setSelectedRole} />
                     <SyncProcessCard />
