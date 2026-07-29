@@ -1,23 +1,26 @@
-import { faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
-import { Pressable, Text, TouchableOpacity, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
+
 import { colors } from '@/constants/colors'
 import { getLifelogHealth, getLifelogPendingFootage } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { downloadActions } from '@/store/downloadSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
-export default function SettingsHeader() {
+interface Props {
+    variant?: 'default' | 'settings'
+    onSettingsPress?: () => void
+    onBackPress?: () => void
+}
+
+export default function AppHeader({ variant = 'default', onSettingsPress, onBackPress }: Props) {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
-    const [syncLoading, setSyncLoading] = useState<boolean>(false)
+    const [syncLoading, setSyncLoading] = useState(false)
 
-    /**
-     * Verifies the connection to the glasses, then fetches all the
-     * pending footage that can be processed.
-     */
     const handleSync = async () => {
         setSyncLoading(true)
 
@@ -40,8 +43,6 @@ export default function SettingsHeader() {
 
             dispatch(downloadActions.setPendingFootage(pendingFootageCount))
             dispatch(downloadActions.setDownloadedFootage(0))
-
-            console.info(`Found ${pendingFootageCount} pending footage items to download.`)
         }
 
         setSyncLoading(false)
@@ -56,9 +57,9 @@ export default function SettingsHeader() {
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Sync memories"
-                        className="h-11 gap-2 flex-row items-center justify-center rounded-full bg-primary-container px-4 active:bg-primary-fixed-dim"
-                        onPress={() => void handleSync()}
                         disabled={syncLoading}
+                        onPress={() => void handleSync()}
+                        className="h-11 flex-row items-center justify-center gap-2 rounded-full bg-primary-container px-4 active:bg-primary-fixed-dim"
                     >
                         <FontAwesomeIcon icon={faRotate} size={12} color={colors.primary} />
                         <Text className="font-atkinson-semibold text-[16px] text-primary">
@@ -67,20 +68,26 @@ export default function SettingsHeader() {
                     </Pressable>
                 )}
 
-                {/*<Pressable*/}
-                {/*    accessibilityRole="button"*/}
-                {/*    accessibilityLabel="Open settings"*/}
-                {/*    className="h-11 w-11 items-center justify-center active:opacity-70"*/}
-                {/*>*/}
-                {/*    <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />*/}
-                {/*</Pressable>*/}
-                <TouchableOpacity
-                    activeOpacity={0.6}
-                    accessibilityRole="button"
-                    accessibilityLabel="Go back"
-                >
-                    <Text className="font-atkinson-semibold text-[16px] text-primary">Go Back</Text>
-                </TouchableOpacity>
+                {variant === 'settings' ? (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Go back"
+                        onPress={onBackPress}
+                        className="h-11 flex-row items-center justify-center gap-2 active:opacity-70"
+                    >
+                        <FontAwesomeIcon icon={faArrowLeft} size={18} color={colors.primary} />
+                        <Text className="font-atkinson-semibold text-[16px] text-primary">Back</Text>
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Open settings"
+                        onPress={onSettingsPress}
+                        className="h-11 w-11 items-center justify-center active:opacity-70"
+                    >
+                        <FontAwesomeIcon icon={faGear} size={24} color={colors.primary} />
+                    </Pressable>
+                )}
             </View>
         </View>
     )
