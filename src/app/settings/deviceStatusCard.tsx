@@ -11,27 +11,23 @@ export default function DeviceStatusCard() {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
-    const [refreshLoading, setRefreshLoading] = useState(false)
+    const [connectLoading, setConnectLoading] = useState(false)
 
     /**
      * Fetches the current health of the lifelog api.
      * Sets the values to the store.
      */
     const handleRefresh = async () => {
-        setRefreshLoading(true)
+        setConnectLoading(true)
 
         const health = await getLifelogHealth()
         dispatch(connectionActions.setWifiConnected(health))
-        setRefreshLoading(false)
+        setConnectLoading(false)
     }
 
     return (
         <View className="rounded-lg bg-surface-container-high px-6 pb-6 pt-7">
             <View className="mb-8 flex-row items-center">
-                {/*<Text className="font-atkinson-bold text-[15px] uppercase tracking-[1.2px] text-secondary">*/}
-                {/*    Device Status*/}
-                {/*</Text>*/}
-
                 {wifiConnected ? (
                     <View className="flex-row items-center rounded bg-primary-container gap-2 px-3 py-2">
                         <FontAwesomeIcon icon={faWifi} size={12} color={colors.primary} />
@@ -73,8 +69,9 @@ export default function DeviceStatusCard() {
                             accessibilityLabel="Connect to Glasses WiFi"
                             className="h-14 w-full flex-row gap-3 items-center justify-center rounded-full bg-primary px-5 active:bg-on-primary-container"
                             onPress={() => void handleRefresh()}
+                            disabled={connectLoading}
                         >
-                            {refreshLoading ? (
+                            {connectLoading ? (
                                 <Text className="font-atkinson-bold text-[17px] text-on-primary">
                                     Connecting...
                                 </Text>
