@@ -6,10 +6,10 @@ import { colors } from '@/constants/colors'
 
 type SlideSpeed = 'slow' | 'medium' | 'fast'
 
-const speedOptions: { id: SlideSpeed; label: string }[] = [
-    { id: 'slow', label: 'Slow' },
-    { id: 'medium', label: 'Medium' },
-    { id: 'fast', label: 'Fast' },
+const speedOptions: { id: SlideSpeed; label: string; seconds: number }[] = [
+    { id: 'slow', label: 'Slow', seconds: 20 },
+    { id: 'medium', label: 'Medium', seconds: 10 },
+    { id: 'fast', label: 'Fast', seconds: 5 },
 ]
 
 interface Props {
@@ -43,6 +43,9 @@ export default function SlideSpeedSelector({ speed, onSpeedChange }: Props) {
                                 }`}
                             >
                                 {option.label}
+                            </Text>
+                            <Text className={isActive ? 'text-on-primary' : 'text-on-surface-variant'}>
+                                {option.seconds}s
                             </Text>
                         </TouchableOpacity>
                     )

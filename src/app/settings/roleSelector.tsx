@@ -1,7 +1,9 @@
 import { faUser, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 import { Text, View } from 'react-native'
 import RoleCard from '@/app/settings/roleCard'
-import { Role, RoleOption } from '@/types/role'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { navigationActions } from '@/store/navigationSlice'
+import { RoleOption } from '@/types/role'
 
 const roleOptions: RoleOption[] = [
     {
@@ -18,12 +20,10 @@ const roleOptions: RoleOption[] = [
     },
 ]
 
-interface Props {
-    selectedRole: Role
-    onSelectRole: (role: Role) => void
-}
+export default function RoleSelector() {
+    const dispatch = useAppDispatch()
+    const roleState = useAppSelector(state => state.navigation.role)
 
-export default function RoleSelector({ selectedRole, onSelectRole }: Props) {
     return (
         <View>
             <Text className="mb-3 font-atkinson-bold text-[18px] leading-[24px] text-secondary">
@@ -35,8 +35,8 @@ export default function RoleSelector({ selectedRole, onSelectRole }: Props) {
                     <RoleCard
                         key={role.id}
                         role={role}
-                        selected={selectedRole === role.id}
-                        onPress={() => onSelectRole(role.id)}
+                        selected={roleState === role.id}
+                        onPress={() => dispatch(navigationActions.setRole(role.id))}
                     />
                 ))}
             </View>
