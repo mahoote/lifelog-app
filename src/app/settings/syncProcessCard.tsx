@@ -1,10 +1,13 @@
-import { faArrowsRotate, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowsRotate, faBug, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { useRouter } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { deleteAllSavedFootage } from '@/utils/storageUtils'
 
 export default function SyncProcessCard() {
+    const router = useRouter()
+
     return (
         <View className="mt-6 rounded-lg bg-surface-container-low px-6 py-7">
             <View className="mb-5 flex-row items-center">
@@ -24,15 +27,27 @@ export default function SyncProcessCard() {
 
             <View className="mb-5 h-2 rounded-full bg-surface-container-highest" />
 
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Delete all data"
-                className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
-                onPress={() => void deleteAllSavedFootage()}
-            >
-                <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
-                <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
-            </Pressable>
+            <View className="flex gap-2">
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete all data"
+                    className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
+                    onPress={() => void deleteAllSavedFootage()}
+                >
+                    <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
+                    <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
+                </Pressable>
+
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Debug"
+                    className="h-14 flex-row items-center justify-center rounded-full border-2 border-primary bg-surface gap-3 active:bg-error-container"
+                    onPress={() => router.push('/debug')}
+                >
+                    <FontAwesomeIcon icon={faBug} size={16} color={colors.primary} />
+                    <Text className="font-atkinson-bold text-[17px] text-primary">Debug</Text>
+                </Pressable>
+            </View>
         </View>
     )
 }

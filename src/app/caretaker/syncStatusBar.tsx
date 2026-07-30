@@ -1,9 +1,47 @@
 import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
+import { getLifelogPendingFootage } from '@/services/lifelogService'
+import { downloadActions } from '@/store/downloadSlice'
+import { useAppDispatch } from '@/store/hooks'
+import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
 
 export default function SyncStatusBar() {
+    const dispatch = useAppDispatch()
+    const [processLoading, setProcessLoading] = useState<boolean>(false)
+
+    /**
+     * Downloads all pending footage from the lifelog api.
+     * Calculates the total pending footage items and updates the downloadedFootage state
+     * for every downloaded captureEvent.
+     */
+    const handleDownloadFootage = async () => {
+        setProcessLoading(true)
+
+        const captureEvents = await getLifelogPendingFootage()
+
+        if (captureEvents.length) {
+            const pendingFootageCount = captureEvents.reduce(
+                (total, event) => total + (event.footageItems?.length ?? 0),
+                0,
+            )
+
+            dispatch(downloadActions.setPendingFootage(pendingFootageCount))
+            dispatch(downloadActions.setDownloadedFootage(0))
+
+            const downloaded = await downloadCaptureEventsFootage(
+                captureEvents,
+                dispatch,
+                downloadActions.addDownloadedFootage,
+            )
+            console.info(`Downloaded ${downloaded.length} capture events and their footage.`)
+        }
+
+        setProcessLoading(false)
+    }
+
     return (
         <View className="flex-row items-center justify-between rounded-full bg-primary-fixed px-5 py-4">
             <View className="flex-row items-center gap-3">
@@ -22,9 +60,13 @@ export default function SyncStatusBar() {
                 accessibilityRole="button"
                 accessibilityLabel="Process new items"
                 className="h-11 flex-row items-center justify-center gap-2 rounded-full bg-primary px-5 active:bg-on-primary-container"
+                disabled={processLoading}
+                onPress={() => void handleDownloadFootage()}
             >
                 <FontAwesomeIcon icon={faWandMagicSparkles} size={14} color={colors.onPrimary} />
-                <Text className="font-atkinson-bold text-[16px] text-on-primary">Process</Text>
+                <Text className="font-atkinson-bold text-[16px] text-on-primary">
+                    {processLoading ? 'Processing...' : 'Process'}
+                </Text>
             </Pressable>
         </View>
     )

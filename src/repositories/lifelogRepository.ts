@@ -105,7 +105,7 @@ function refreshGalleryDaySync(dayKey: string) {
     }>(
         `
         SELECT
-            SUM(CASE WHEN type = 'image' THEN 1 ELSE 0 END) AS image_count,
+            SUM(CASE WHEN type = 'photo' THEN 1 ELSE 0 END) AS image_count,
             SUM(CASE WHEN type = 'video' THEN 1 ELSE 0 END) AS video_count,
             MIN(created_at) AS first_item_at,
             MAX(created_at) AS last_item_at
@@ -120,7 +120,7 @@ function refreshGalleryDaySync(dayKey: string) {
         SELECT file_uri
         FROM footage_item
         WHERE day_key = ?
-          AND type = 'image'
+          AND type = 'photo'
         ORDER BY created_at ASC
         LIMIT 1;
         `,
@@ -337,7 +337,7 @@ export async function getGalleryImagesForDay(dayKey: string): Promise<GalleryIma
             tags_json
         FROM footage_item
         WHERE day_key = ?
-          AND type = 'image'
+          AND type = 'photo'
         ORDER BY created_at ASC;
         `,
         [dayKey],

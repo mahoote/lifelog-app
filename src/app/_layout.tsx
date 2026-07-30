@@ -67,6 +67,10 @@ export default function RootLayout() {
                             name="footage/index"
                             options={{ title: 'View Footage', animation: 'ios_from_right' }}
                         />
+                        <Stack.Screen
+                            name="debug/index"
+                            options={{ title: 'Debug', animation: 'none' }}
+                        />
                     </Stack>
                 </Provider>
             </QueryClientProvider>
