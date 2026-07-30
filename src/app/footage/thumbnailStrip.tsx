@@ -20,8 +20,7 @@ export default function ThumbnailStrip({ items, selectedIndex, onSelect }: Props
     const scrollRef = useRef<ScrollView>(null)
 
     useEffect(() => {
-        // Center the selected thumbnail
-        const offset = selectedIndex * (THUMB_SIZE + THUMB_GAP) - SCREEN_WIDTH / 2 + THUMB_SIZE / 2
+        const offset = 16 + selectedIndex * (THUMB_SIZE + THUMB_GAP) - SCREEN_WIDTH / 2 + THUMB_SIZE / 2
 
         scrollRef.current?.scrollTo({ x: Math.max(0, offset), animated: true })
     }, [selectedIndex])
@@ -31,7 +30,12 @@ export default function ThumbnailStrip({ items, selectedIndex, onSelect }: Props
             ref={scrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: THUMB_GAP, paddingVertical: 10 }}
+            contentContainerStyle={{
+                paddingHorizontal: 16,
+                gap: THUMB_GAP,
+                paddingVertical: 10,
+            }}
+            className="flex-grow-0"
         >
             {items.map((item, index) => {
                 const isSelected = index === selectedIndex
