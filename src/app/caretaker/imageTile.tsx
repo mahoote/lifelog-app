@@ -1,5 +1,6 @@
 import { faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { useRouter } from 'expo-router'
 import { Image, Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { MediaItem } from '@/types/image'
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ImageTile({ item, size }: Props) {
+    const router = useRouter()
     const tileStyle = { width: size, height: size }
 
     if (item.overflow !== undefined) {
@@ -47,6 +49,7 @@ export default function ImageTile({ item, size }: Props) {
             accessibilityLabel={item.time ? `Memory at ${item.time}` : 'Memory image'}
             style={tileStyle}
             className="overflow-hidden rounded-lg active:opacity-90"
+            onPress={() => router.push(`/footage`)}
         >
             {item.uri ? (
                 <Image source={{ uri: item.uri }} className="h-full w-full" resizeMode="cover" />
