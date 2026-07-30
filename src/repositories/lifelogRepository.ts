@@ -350,3 +350,30 @@ export function getCaptureEvents(): CaptureEvent[] {
         footageItems: footageItemsByCaptureEventId.get(row.id!) ?? [],
     }))
 }
+
+export async function deleteAllLifelogDataAndVacuum(): Promise<{
+    success: boolean
+    error: Error | null
+}> {
+    try {
+        await db.withTransactionAsync(async () => {
+            await db.runAsync(`DELETE FROM footage_item;`)
+            await db.runAsync(`DELETE FROM capture_event;`)
+            await db.runAsync(`DELETE FROM gallery_day;`)
+        })
+
+        await db.execAsync(`VACUUM;`)
+
+        return {
+            success: true,
+            error: null,
+        }
+    } catch (error) {
+        console.error('Failed to delete lifelog data', error)
+
+        return {
+            success: false,
+            error: error as Error,
+        }
+    }
+}

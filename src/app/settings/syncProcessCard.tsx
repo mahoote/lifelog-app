@@ -1,5 +1,6 @@
 import { faArrowsRotate, faBug, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
@@ -7,6 +8,7 @@ import { deleteAllSavedFootage } from '@/utils/storageUtils'
 
 export default function SyncProcessCard() {
     const router = useRouter()
+    const queryClient = useQueryClient()
 
     return (
         <View className="mt-6 rounded-lg bg-surface-container-low px-6 py-7">
@@ -32,7 +34,7 @@ export default function SyncProcessCard() {
                     accessibilityRole="button"
                     accessibilityLabel="Delete all data"
                     className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
-                    onPress={() => void deleteAllSavedFootage()}
+                    onPress={() => void deleteAllSavedFootage(queryClient)}
                 >
                     <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
                     <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>

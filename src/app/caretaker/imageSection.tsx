@@ -16,7 +16,7 @@ export default function ImageSection({ dayKey }: Props) {
 
     if (!dayKey) {
         return (
-            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
+            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant text-center">
                 No day selected.
             </Text>
         )
@@ -42,13 +42,15 @@ export default function ImageSection({ dayKey }: Props) {
 
     if (error) {
         return (
-            <Text className="font-atkinson-medium text-[14px] text-error">Could not load images.</Text>
+            <Text className="font-atkinson-medium text-[14px] text-error text-center">
+                Could not load images.
+            </Text>
         )
     }
 
     if (images.length === 0) {
         return (
-            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
+            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant text-center">
                 No images for this day.
             </Text>
         )
