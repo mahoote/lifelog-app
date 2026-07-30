@@ -1,21 +1,16 @@
 import { Text, useWindowDimensions, View } from 'react-native'
 import ImageTile from '@/app/caretaker/imageTile'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
-import { MediaItem } from '@/types/image'
 
-interface ImageSectionProps {
+import { MediaItem } from '@/types/media'
+import { formatImageTime } from '@/utils/dateUtils'
+
+interface Props {
     title: string
     dayKey: string | null
 }
 
-function formatImageTime(createdAt: string): string {
-    return new Date(createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
-
-export default function ImageSection({ title, dayKey }: ImageSectionProps) {
+export default function ImageSection({ title, dayKey }: Props) {
     const { width } = useWindowDimensions()
     const { data: images = [], isLoading, isFetching, error } = useGalleryImages(dayKey)
 
@@ -25,7 +20,6 @@ export default function ImageSection({ title, dayKey }: ImageSectionProps) {
         id: image.id,
         uri: image.fileUri,
         time: formatImageTime(image.createdAt),
-        badge: image.state === 'processing' ? 'processing' : undefined,
     }))
 
     const rows: MediaItem[][] = []

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getGalleryImagesForDay } from '@/repositories/lifelogRepository'
+import { getFootageItemsForDay } from '@/repositories/lifelogRepository'
 
 export function useGalleryImages(dayKey: string | null) {
     return useQuery({
@@ -9,7 +9,7 @@ export function useGalleryImages(dayKey: string | null) {
                 return []
             }
 
-            return getGalleryImagesForDay(dayKey)
+            return getFootageItemsForDay(dayKey)
         },
         enabled: Boolean(dayKey),
         staleTime: 1000 * 60 * 10,

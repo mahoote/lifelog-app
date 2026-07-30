@@ -1,98 +1,10 @@
 import { db } from '@/database'
+import { mapRowToFootageItem } from '@/mappers/footageMapper'
+import { mapGalleryDayRow } from '@/mappers/galleryDayMapper'
 import { CaptureEvent, CaptureEventRow } from '@/types/captureEvent'
-import { FootageItem, FootageItemRow } from '@/types/footageItem'
-
-export interface GalleryDay {
-    dayKey: string
-    imageCount: number
-    videoCount: number
-    firstItemAt: string | null
-    lastItemAt: string | null
-    coverImageUri: string | null
-    updatedAt: string
-}
-
-export interface GalleryDayRow {
-    day_key: string
-    image_count: number
-    video_count: number
-    first_item_at: string | null
-    last_item_at: string | null
-    cover_image_uri: string | null
-    updated_at: string
-}
-
-export interface GalleryImage {
-    id: string
-    captureEventId: string
-    sequenceIndex: number
-    type: string
-    role: string
-    createdAt: string
-    fileUri: string
-    sizeBytes: number
-    state: string
-    durationS: number | null
-    importedAt: string
-    dayKey: string
-    isFavorite: boolean
-    notes: string | null
-    tagsJson: string | null
-}
-
-export interface GalleryImageRow {
-    id: string
-    capture_event_id: string
-    sequence_index: number
-    type: string
-    role: string
-    created_at: string
-    file_uri: string
-    size_bytes: number
-    state: string
-    duration_s: number | null
-    imported_at: string
-    day_key: string
-    is_favorite: number
-    notes: string | null
-    tags_json: string | null
-}
-
-function getDayKey(isoDate: string): string {
-    return isoDate.slice(0, 10)
-}
-
-function mapGalleryImageRow(row: GalleryImageRow): GalleryImage {
-    return {
-        id: row.id,
-        captureEventId: row.capture_event_id,
-        sequenceIndex: row.sequence_index,
-        type: row.type,
-        role: row.role,
-        createdAt: row.created_at,
-        fileUri: row.file_uri,
-        sizeBytes: row.size_bytes,
-        state: row.state,
-        durationS: row.duration_s,
-        importedAt: row.imported_at,
-        dayKey: row.day_key,
-        isFavorite: row.is_favorite === 1,
-        notes: row.notes,
-        tagsJson: row.tags_json,
-    }
-}
-
-function mapGalleryDayRow(row: GalleryDayRow): GalleryDay {
-    return {
-        dayKey: row.day_key,
-        imageCount: row.image_count,
-        videoCount: row.video_count,
-        firstItemAt: row.first_item_at,
-        lastItemAt: row.last_item_at,
-        coverImageUri: row.cover_image_uri,
-        updatedAt: row.updated_at,
-    }
-}
+import { FootageItem, FootageItemRow, FootageType } from '@/types/footageItem'
+import { GalleryDay, GalleryDayRow } from '@/types/galleryDay'
+import { getDayKey } from '@/utils/dateUtils'
 
 function refreshGalleryDaySync(dayKey: string) {
     const now = new Date().toISOString()
@@ -316,8 +228,11 @@ export async function getLatestGalleryDay(): Promise<GalleryDay | null> {
     return row ? mapGalleryDayRow(row) : null
 }
 
-export async function getGalleryImagesForDay(dayKey: string): Promise<GalleryImage[]> {
-    const rows = await db.getAllAsync<GalleryImageRow>(
+export async function getFootageItemsForDay(
+    dayKey: string,
+    type: FootageType = FootageType.PHOTO,
+): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
         `
         SELECT
             id,
@@ -337,43 +252,13 @@ export async function getGalleryImagesForDay(dayKey: string): Promise<GalleryIma
             tags_json
         FROM footage_item
         WHERE day_key = ?
-          AND type = 'photo'
+          AND type = ?
         ORDER BY created_at ASC;
         `,
-        [dayKey],
+        [dayKey, type],
     )
 
-    return rows.map(mapGalleryImageRow)
-}
-
-export async function getGalleryVideosForDay(dayKey: string): Promise<GalleryImage[]> {
-    const rows = await db.getAllAsync<GalleryImageRow>(
-        `
-        SELECT
-            id,
-            capture_event_id,
-            sequence_index,
-            type,
-            role,
-            created_at,
-            file_uri,
-            size_bytes,
-            state,
-            duration_s,
-            imported_at,
-            day_key,
-            is_favorite,
-            notes,
-            tags_json
-        FROM footage_item
-        WHERE day_key = ?
-          AND type = 'video'
-        ORDER BY created_at ASC;
-        `,
-        [dayKey],
-    )
-
-    return rows.map(mapGalleryImageRow)
+    return rows.map(mapRowToFootageItem)
 }
 
 export async function rebuildGalleryDays(): Promise<void> {
@@ -391,40 +276,6 @@ export async function rebuildGalleryDays(): Promise<void> {
             refreshGalleryDaySync(row.day_key)
         }
     })
-}
-
-export async function deleteFootageItem(id: string): Promise<void> {
-    const existing = await db.getFirstAsync<{ day_key: string }>(
-        `
-        SELECT day_key
-        FROM footage_item
-        WHERE id = ?;
-        `,
-        [id],
-    )
-
-    await db.runAsync(
-        `
-        DELETE FROM footage_item
-        WHERE id = ?;
-        `,
-        [id],
-    )
-
-    if (existing?.day_key) {
-        refreshGalleryDaySync(existing.day_key)
-    }
-}
-
-export async function toggleFavoriteFootageItem(id: string, isFavorite: boolean): Promise<void> {
-    await db.runAsync(
-        `
-        UPDATE footage_item
-        SET is_favorite = ?
-        WHERE id = ?;
-        `,
-        [isFavorite ? 1 : 0, id],
-    )
 }
 
 /**
@@ -481,7 +332,7 @@ export function getCaptureEvents(): CaptureEvent[] {
             durationS: row.duration_s,
             importedAt: row.imported_at,
             dayKey: row.day_key,
-            isFavorite: row.is_favorite,
+            isFavorite: row.is_favorite === 1,
             notes: row.notes,
             tagsJson: row.tags_json,
         }

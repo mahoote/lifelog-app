@@ -3,7 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useRouter } from 'expo-router'
 import { Image, Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
-import { MediaItem } from '@/types/image'
+
+import { MediaItem } from '@/types/media'
 
 interface Props {
     item: MediaItem
