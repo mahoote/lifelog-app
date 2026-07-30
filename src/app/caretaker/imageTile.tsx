@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router'
 import { Image, Pressable, Text, View } from 'react-native'
 
 import { FootageItem } from '@/types/footageItem'
+import { formatImageTime } from '@/utils/dateUtils'
 
 interface Props {
     item: FootageItem
@@ -37,7 +38,7 @@ export default function ImageTile({ item, size }: Props) {
                 {item.createdAt ? (
                     <View className="self-start rounded-md bg-black/50 px-2 py-1">
                         <Text className="font-atkinson-semibold text-[13px] text-white">
-                            {item.createdAt}
+                            {formatImageTime(item.createdAt)}
                         </Text>
                     </View>
                 ) : null}
