@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { Directory, Paths, File } from 'expo-file-system'
-import { deleteAllLifelogDataAndVacuum } from '@/repositories/lifelogRepository'
+import { deleteAllLifelogDataAndVacuum } from '@/repositories/galleryDayRepository'
 import { invalidateQueries } from '@/utils/queryUtils'
 
 /**

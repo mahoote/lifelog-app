@@ -1,20 +1,22 @@
-import { useState } from 'react'
+import { useLocalSearchParams } from 'expo-router'
+import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import FootageHeader from '@/app/footage/footageHeader'
 import MainImage from '@/app/footage/mainImage'
 import MomentDescription from '@/app/footage/momentDescription'
-import ThumbnailStrip from '@/app/footage/thumbnailStrip'
+import { getFootageItemById } from '@/repositories/footageItemRepository'
+import { FootageItem } from '@/types/footageItem'
 
-interface FootageItem {
+interface ImageItemTest {
     id: string
     uri?: string
     title: string
     description: string
 }
 
-const items: FootageItem[] = [
+const items: ImageItemTest[] = [
     {
         id: '1',
         title: 'Morning Tea',
@@ -60,28 +62,39 @@ const items: FootageItem[] = [
 ]
 
 export default function FootageScreen() {
-    const [selectedIndex, setSelectedIndex] = useState(2)
-    const current = items[selectedIndex]
+    // const [selectedIndex, setSelectedIndex] = useState(2)
+    // const current = items[selectedIndex]
+
+    const [current, setCurrent] = useState<FootageItem | null>(null)
+
+    const { id } = useLocalSearchParams<{ id: string }>()
+
+    useEffect(() => {
+        const fetchFootageItem = async () => {
+            if (!id) return
+
+            const item = await getFootageItemById(id)
+            setCurrent(item)
+        }
+
+        void fetchFootageItem()
+    }, [id])
 
     return (
         <SafeAreaView className="flex-1 bg-surface">
-            <FootageHeader
-                current={selectedIndex + 1}
-                total={items.length}
-                date="Monday, 29 July 2024"
-            />
+            <FootageHeader current={0} total={items.length} date="Monday, 29 July 2024" />
 
             <View className="flex-1">
-                <MainImage uri={current.uri} />
+                <MainImage uri={current?.fileUri} />
 
-                <ThumbnailStrip
-                    items={items}
-                    selectedIndex={selectedIndex}
-                    onSelect={setSelectedIndex}
-                />
+                {/*<ThumbnailStrip*/}
+                {/*    items={items}*/}
+                {/*    selectedIndex={selectedIndex}*/}
+                {/*    onSelect={setSelectedIndex}*/}
+                {/*/>*/}
 
                 <View className="mt-4 px-6">
-                    <MomentDescription title={current.title} description={current.description} />
+                    <MomentDescription title={'Image'} description={'Description'} />
                 </View>
             </View>
         </SafeAreaView>

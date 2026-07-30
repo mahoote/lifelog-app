@@ -1,5 +1,5 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
-import { saveCaptureEvent } from '@/repositories/lifelogRepository'
+import { saveCaptureEvent } from '@/repositories/captureEventRepository'
 import { downloadFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'

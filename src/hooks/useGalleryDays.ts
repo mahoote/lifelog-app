@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { getGalleryDays } from '@/repositories/lifelogRepository'
+
+import { getGalleryDays } from '@/repositories/galleryDayRepository'
 
 export function useGalleryDays() {
     return useQuery({

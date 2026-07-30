@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getFootageItemsForDay } from '@/repositories/lifelogRepository'
+import { getFootageItemsForDay } from '@/repositories/footageItemRepository'
 import { FootageType } from '@/types/footageItem'
 
 export function useGalleryImages(dayKey: string | null) {
