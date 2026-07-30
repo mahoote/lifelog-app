@@ -66,7 +66,10 @@ export default function FootageScreen() {
                 <View className="mt-4 px-6">
                     <MomentDescription
                         title="Image"
-                        description={current?.notes ?? 'No description available.'}
+                        description={
+                            current?.notes ??
+                            'This image is used only as context for the memory and does not have a description.'
+                        }
                     />
                 </View>
             </View>
