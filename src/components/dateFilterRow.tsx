@@ -6,18 +6,21 @@ import {
     BottomSheetModal,
     BottomSheetView,
 } from '@gorhom/bottom-sheet'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
 import { colors } from '@/constants/colors'
 import { useGalleryDays } from '@/hooks/useGalleryDays'
+import { footageActions } from '@/store/footageSlice'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { formatDate } from '@/utils/dateUtils'
 
 export default function DateFilterRow() {
-    const { data: galleryDays = [], isLoading, isFetching, error } = useGalleryDays()
+    const dispatch = useAppDispatch()
+    const selectedDate = useAppSelector(state => state.footage.selectedDate)
 
+    const { data: galleryDays = [], isLoading, isFetching, error } = useGalleryDays()
     const allowedDates: Date[] = galleryDays.map(day => new Date(day.dayKey))
-    const [selected, setSelected] = useState<Date | undefined>(allowedDates[0])
 
     const sheetRef = useRef<BottomSheetModal>(null)
     const snapPoints = useMemo(() => ['35%'], [])
@@ -25,7 +28,7 @@ export default function DateFilterRow() {
     const openSheet = () => sheetRef.current?.present()
 
     const handleSelect = (date: Date) => {
-        setSelected(date)
+        dispatch(footageActions.setSelectedDate(date))
         sheetRef.current?.dismiss()
     }
 
@@ -46,7 +49,7 @@ export default function DateFilterRow() {
      */
     useEffect(() => {
         if (galleryDays.length && !isLoading && !isFetching && !error) {
-            setSelected(allowedDates[0])
+            dispatch(footageActions.setSelectedDate(allowedDates[0]))
         }
     }, [galleryDays, isLoading, isFetching, error])
 
@@ -60,7 +63,7 @@ export default function DateFilterRow() {
                 >
                     <FontAwesomeIcon icon={faCalendar} size={15} color={colors.onSurfaceVariant} />
                     <Text className="font-atkinson-medium text-[16px] text-on-surface">
-                        {selected ? formatDate(selected) : 'Select date'}
+                        {selectedDate ? formatDate(selectedDate) : 'Select date'}
                     </Text>
                     <FontAwesomeIcon icon={faChevronDown} size={12} color={colors.onSurfaceVariant} />
                 </TouchableOpacity>
@@ -83,8 +86,8 @@ export default function DateFilterRow() {
                         <Text>No dates</Text>
                     ) : (
                         allowedDates.map((date, index) => {
-                            const isSelected = selected
-                                ? date.toDateString() === selected.toDateString()
+                            const isSelected = selectedDate
+                                ? date.toDateString() === selectedDate.toDateString()
                                 : false
                             return (
                                 <TouchableOpacity

@@ -2,15 +2,16 @@ import { Text, useWindowDimensions, View } from 'react-native'
 
 import ImageTile from '@/app/caretaker/imageTile'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
+import { useAppSelector } from '@/store/hooks'
 import { FootageItem } from '@/types/footageItem'
-import { groupByTimeOfDay } from '@/utils/dateUtils'
+import { getDayKey, groupByTimeOfDay } from '@/utils/dateUtils'
 
-interface Props {
-    dayKey: string | null
-}
-
-export default function ImageSection({ dayKey }: Props) {
+export default function ImageSection() {
     const { width } = useWindowDimensions()
+
+    const selectedDate = useAppSelector(state => state.footage.selectedDate)
+    const dayKey = getDayKey(selectedDate?.toISOString() ?? '')
+
     const { data: images = [], isLoading, isFetching, error } = useGalleryImages(dayKey)
     const tileSize = (width - 64 - 16) / 3
 

@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { Directory, Paths, File } from 'expo-file-system'
 import { deleteAllLifelogDataAndVacuum } from '@/repositories/lifelogRepository'
+import { invalidateQueries } from '@/utils/queryUtils'
 
 /**
  * Gets the total size in bytes of all footage files stored in the private document directory.
@@ -39,14 +40,7 @@ export async function deleteAllSavedFootage(queryClient: QueryClient) {
     }
 
     await deleteAllLifelogDataAndVacuum()
-
-    await queryClient.invalidateQueries({
-        queryKey: ['gallery-days'],
-    })
-
-    await queryClient.invalidateQueries({
-        queryKey: ['gallery-images'],
-    })
+    await invalidateQueries(queryClient)
 
     console.info('Deleted all saved lifelog footage', new Date().toISOString())
 }
