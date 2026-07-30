@@ -59,40 +59,34 @@ export default function CaretakerScreen() {
         <SafeAreaView className="flex-1 bg-surface">
             <ScrollView
                 className="flex-1"
-                contentContainerClassName="pb-10"
+                contentContainerClassName="pb-10 px-8 gap-4"
                 showsVerticalScrollIndicator={false}
             >
-                <View className="px-8 pt-2">
+                <View className="pt-2">
                     <AppHeader title="Caretaker" />
                 </View>
 
-                <View className="mt-6 px-8">
+                <View className="mt-2">
                     <MediaTabBar activeTab={activeTab} onTabPress={setActiveTab} />
                 </View>
 
-                <View className="mt-4 px-8">
-                    <SyncStatusBar />
-                </View>
+                <SyncStatusBar />
 
-                <View className="mt-4 px-8">
-                    <DateFilterRow />
-                </View>
+                <DateFilterRow />
 
-                <View className="mt-4 px-8">
-                    <TimeOfDayFilter activeFilter={timeFilter} onFilterChange={setTimeFilter} />
-                </View>
+                <TimeOfDayFilter activeFilter={timeFilter} onFilterChange={setTimeFilter} />
 
                 {activeTab === 'images' ? (
-                    <View className="mt-5 px-8">
+                    <View className="mt-1">
                         <ImageSection dayKey={'2026-07-29'} />
                     </View>
                 ) : (
                     <>
-                        <View className="mt-6 px-8">
+                        <View className="mt-2">
                             <InfoBar />
                         </View>
 
-                        <View className="mt-6 px-8 gap-7">
+                        <View className="mt-2 gap-7">
                             {videoGroups.map(group => (
                                 <VideoSection key={group.label} group={group} />
                             ))}

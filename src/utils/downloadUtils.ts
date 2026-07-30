@@ -14,7 +14,7 @@ import { CaptureEvent } from '@/types/captureEvent'
 export async function downloadCaptureEventsFootage(
     captureEvents: CaptureEvent[],
     dispatch: AppDispatch,
-    addDownloadedFootage: ActionCreatorWithPayload<number, 'download/addDownloadedFootage'>,
+    addDownloadedFootage: ActionCreatorWithPayload<number, 'footage/addDownloadedFootage'>,
 ): Promise<
     {
         captureEventId: string | null

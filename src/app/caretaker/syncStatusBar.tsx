@@ -5,11 +5,15 @@ import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { getLifelogPendingFootage } from '@/services/lifelogService'
 import { footageActions } from '@/store/footageSlice'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
 
 export default function SyncStatusBar() {
     const dispatch = useAppDispatch()
+
+    const pendingFootage = useAppSelector(state => state.footage.pendingFootage)
+    const downloadedFootage = useAppSelector(state => state.footage.downloadedFootage)
+
     const [processLoading, setProcessLoading] = useState<boolean>(false)
 
     /**
@@ -42,16 +46,18 @@ export default function SyncStatusBar() {
         setProcessLoading(false)
     }
 
+    if (!pendingFootage) return null
+
     return (
         <View className="flex-row items-center justify-between rounded-full bg-primary-fixed px-5 py-4">
             <View className="flex-row items-center gap-3">
                 <View className="h-2.5 w-2.5 rounded-full bg-primary" />
                 <View>
                     <Text className="font-atkinson-bold text-[16px] leading-[20px] text-on-primary-fixed">
-                        239 New Items
+                        {pendingFootage} New Items
                     </Text>
                     <Text className="font-atkinson text-[14px] leading-[18px] text-on-primary-fixed-variant">
-                        Processed: 54
+                        Processed: {downloadedFootage}
                     </Text>
                 </View>
             </View>
