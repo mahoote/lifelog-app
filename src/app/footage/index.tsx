@@ -13,36 +13,42 @@ import { FootageItem } from '@/types/footageItem'
 
 export default function FootageScreen() {
     const [current, setCurrent] = useState<FootageItem | null>(null)
+    const [selectedId, setSelectedId] = useState<string | null>(null)
 
     const { id } = useLocalSearchParams<{ id: string }>()
+    const routeId = Array.isArray(id) ? (id[0] as string) : id
 
-    const currentId = Array.isArray(id) ? (id[0] as string) : id
+    useEffect(() => {
+        if (routeId) {
+            setSelectedId(routeId)
+        }
+    }, [routeId])
+
+    useEffect(() => {
+        async function fetchFootageItem() {
+            if (!selectedId) {
+                setCurrent(null)
+                return
+            }
+
+            const item = await getFootageItemById(selectedId)
+            setCurrent(item)
+        }
+
+        void fetchFootageItem()
+    }, [selectedId])
 
     const dayKey = current?.dayKey ?? null
 
     const { data: images = [] } = useGalleryImages(dayKey)
 
     const selectedIndex = useMemo(() => {
-        if (!currentId) {
+        if (!selectedId) {
             return -1
         }
 
-        return images.findIndex(item => item.id === currentId)
-    }, [images, currentId])
-
-    useEffect(() => {
-        async function fetchFootageItem() {
-            if (!currentId) {
-                setCurrent(null)
-                return
-            }
-
-            const item = await getFootageItemById(currentId)
-            setCurrent(item)
-        }
-
-        void fetchFootageItem()
-    }, [currentId])
+        return images.findIndex(item => item.id === selectedId)
+    }, [images, selectedId])
 
     return (
         <SafeAreaView className="flex-1 bg-surface">
@@ -55,7 +61,7 @@ export default function FootageScreen() {
             <View className="flex-1">
                 <MainImage uri={current?.fileUri} />
 
-                <ThumbnailStrip dayKey={dayKey} selectedId={currentId ?? null} />
+                <ThumbnailStrip dayKey={dayKey} selectedId={selectedId} onSelect={setSelectedId} />
 
                 <View className="mt-4 px-6">
                     <MomentDescription

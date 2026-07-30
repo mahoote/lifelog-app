@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router'
 import { useEffect, useMemo, useRef } from 'react'
 import { Dimensions, Image, ScrollView, TouchableOpacity } from 'react-native'
 
@@ -12,10 +11,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 interface Props {
     dayKey: string | null
     selectedId: string | null
+    onSelect: (id: string) => void
 }
 
-export default function ThumbnailStrip({ dayKey, selectedId }: Props) {
-    const router = useRouter()
+export default function ThumbnailStrip({ dayKey, selectedId, onSelect }: Props) {
     const scrollRef = useRef<ScrollView>(null)
 
     const { data: images = [] } = useGalleryImages(dayKey)
@@ -67,14 +66,7 @@ export default function ThumbnailStrip({ dayKey, selectedId }: Props) {
                     <TouchableOpacity
                         key={item.id}
                         activeOpacity={0.8}
-                        onPress={() => {
-                            router.replace({
-                                pathname: '/footage',
-                                params: {
-                                    id: item.id,
-                                },
-                            })
-                        }}
+                        onPress={() => onSelect(item.id!)}
                         style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
                         className={`overflow-hidden rounded-md ${
                             isSelected ? 'border-2 border-primary' : 'border-2 border-transparent'
