@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { getLifelogPendingFootage } from '@/services/lifelogService'
-import { downloadActions } from '@/store/downloadSlice'
+import { footageActions } from '@/store/footageSlice'
 import { useAppDispatch } from '@/store/hooks'
 import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
 
@@ -28,13 +28,13 @@ export default function SyncStatusBar() {
                 0,
             )
 
-            dispatch(downloadActions.setPendingFootage(pendingFootageCount))
-            dispatch(downloadActions.setDownloadedFootage(0))
+            dispatch(footageActions.setPendingFootage(pendingFootageCount))
+            dispatch(footageActions.setDownloadedFootage(0))
 
             const downloaded = await downloadCaptureEventsFootage(
                 captureEvents,
                 dispatch,
-                downloadActions.addDownloadedFootage,
+                footageActions.addDownloadedFootage,
             )
             console.info(`Downloaded ${downloaded.length} capture events and their footage.`)
         }
