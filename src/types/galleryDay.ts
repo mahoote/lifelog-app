@@ -1,3 +1,5 @@
+export type TimeOfDay = 'Morning' | 'Afternoon' | 'Evening' | 'Night'
+
 export interface GalleryDay {
     dayKey: string
     imageCount: number
@@ -7,7 +9,6 @@ export interface GalleryDay {
     coverImageUri: string | null
     updatedAt: string
 }
-
 export interface GalleryDayRow {
     day_key: string
     image_count: number

@@ -84,7 +84,7 @@ export default function CaretakerScreen() {
 
                 {activeTab === 'images' ? (
                     <View className="mt-5 px-8">
-                        <ImageSection title="Morning" dayKey={'2026-07-29'} />
+                        <ImageSection dayKey={'2026-07-29'} />
                     </View>
                 ) : (
                     <>

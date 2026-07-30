@@ -1,122 +1,93 @@
 import { Text, useWindowDimensions, View } from 'react-native'
+
 import ImageTile from '@/app/caretaker/imageTile'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
-
 import { FootageItem } from '@/types/footageItem'
+import { groupByTimeOfDay } from '@/utils/dateUtils'
 
 interface Props {
-    title: string
     dayKey: string | null
 }
 
-export default function ImageSection({ title, dayKey }: Props) {
+export default function ImageSection({ dayKey }: Props) {
     const { width } = useWindowDimensions()
     const { data: images = [], isLoading, isFetching, error } = useGalleryImages(dayKey)
-
     const tileSize = (width - 64 - 16) / 3
-    const galleryRows: FootageItem[][] = []
-
-    for (let i = 0; i < images.length; i += 3) {
-        galleryRows.push(images.slice(i, i + 3))
-    }
 
     if (!dayKey) {
         return (
-            <View>
-                <Text className="mb-4 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                    {title}
-                </Text>
-
-                <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
-                    No day selected.
-                </Text>
-            </View>
+            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
+                No day selected.
+            </Text>
         )
     }
 
     if (isLoading) {
         return (
-            <View>
-                <Text className="mb-4 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                    {title}
-                </Text>
-
-                <View className="gap-2">
-                    <View className="flex-row gap-2">
-                        {[0, 1, 2].map(index => (
+            <View className="gap-2">
+                {[0, 1].map(row => (
+                    <View key={row} className="flex-row gap-2">
+                        {[0, 1, 2].map(col => (
                             <View
-                                key={index}
+                                key={col}
                                 style={{ width: tileSize, height: tileSize }}
                                 className="rounded-lg bg-surface-container-high"
                             />
                         ))}
                     </View>
-
-                    <View className="flex-row gap-2">
-                        {[0, 1, 2].map(index => (
-                            <View
-                                key={index}
-                                style={{ width: tileSize, height: tileSize }}
-                                className="rounded-lg bg-surface-container-high"
-                            />
-                        ))}
-                    </View>
-                </View>
+                ))}
             </View>
         )
     }
 
     if (error) {
         return (
-            <View>
-                <Text className="mb-4 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                    {title}
-                </Text>
-
-                <Text className="font-atkinson-medium text-[14px] text-error">
-                    Could not load images.
-                </Text>
-            </View>
+            <Text className="font-atkinson-medium text-[14px] text-error">Could not load images.</Text>
         )
     }
 
     if (images.length === 0) {
         return (
-            <View>
-                <Text className="mb-4 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                    {title}
-                </Text>
-
-                <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
-                    No images for this day.
-                </Text>
-            </View>
+            <Text className="font-atkinson-medium text-[14px] text-on-surface-variant">
+                No images for this day.
+            </Text>
         )
     }
 
+    const groups = groupByTimeOfDay(images)
+
     return (
-        <View>
-            <View className="mb-4 flex-row items-center justify-between">
-                <Text className="font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                    {title}
+        <View className="gap-6">
+            {isFetching && (
+                <Text className="font-atkinson-medium text-[12px] text-on-surface-variant">
+                    Updating...
                 </Text>
+            )}
 
-                {isFetching ? (
-                    <Text className="font-atkinson-medium text-[12px] text-on-surface-variant">
-                        Updating...
-                    </Text>
-                ) : null}
-            </View>
+            {groups.map(({ label, items }) => {
+                const rows: FootageItem[][] = []
+                for (let i = 0; i < items.length; i += 3) {
+                    rows.push(items.slice(i, i + 3))
+                }
 
-            <View className="gap-2">
-                {galleryRows.map((row, rowIndex) => (
-                    <View key={rowIndex} className="flex-row gap-2">
-                        {row.map(item => (
-                            <ImageTile key={item.id} item={item} size={tileSize} />
-                        ))}
+                return (
+                    <View key={label}>
+                        <Text className="mb-3 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
+                            {label}
+                        </Text>
+
+                        <View className="gap-2">
+                            {rows.map((row, rowIndex) => (
+                                <View key={rowIndex} className="flex-row gap-2">
+                                    {row.map(item => (
+                                        <ImageTile key={item.id} item={item} size={tileSize} />
+                                    ))}
+                                </View>
+                            ))}
+                        </View>
                     </View>
-                ))}
-            </View>
+                )
+            })}
         </View>
     )
 }

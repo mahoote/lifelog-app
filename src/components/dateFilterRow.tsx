@@ -1,4 +1,4 @@
-import { faArrowDownWideShort, faCalendar, faChevronDown } from '@fortawesome/free-solid-svg-icons'
+import { faCalendar, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import {
     BottomSheetBackdrop,
@@ -13,11 +13,7 @@ import { colors } from '@/constants/colors'
 import { useGalleryDays } from '@/hooks/useGalleryDays'
 import { formatDate } from '@/utils/dateUtils'
 
-interface Props {
-    imageCount?: number
-}
-
-export default function DateFilterRow({ imageCount = 324 }: Props) {
+export default function DateFilterRow() {
     const { data: galleryDays = [], isLoading, isFetching, error } = useGalleryDays()
 
     const allowedDates: Date[] = galleryDays.map(day => new Date(day.dayKey))
@@ -67,17 +63,6 @@ export default function DateFilterRow({ imageCount = 324 }: Props) {
                         {selected ? formatDate(selected) : 'Select date'}
                     </Text>
                     <FontAwesomeIcon icon={faChevronDown} size={12} color={colors.onSurfaceVariant} />
-                </TouchableOpacity>
-
-                <TouchableOpacity activeOpacity={0.7} className="flex-row items-center gap-2">
-                    <Text className="font-atkinson-medium text-[16px] text-on-surface-variant">
-                        {imageCount} Images
-                    </Text>
-                    <FontAwesomeIcon
-                        icon={faArrowDownWideShort}
-                        size={16}
-                        color={colors.onSurfaceVariant}
-                    />
                 </TouchableOpacity>
             </View>
 
