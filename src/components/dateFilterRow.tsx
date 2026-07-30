@@ -13,11 +13,12 @@ import { colors } from '@/constants/colors'
 import { useGalleryDays } from '@/hooks/useGalleryDays'
 import { footageActions } from '@/store/footageSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { selectSelectedDate } from '@/store/selectors'
 import { formatDate } from '@/utils/dateUtils'
 
 export default function DateFilterRow() {
     const dispatch = useAppDispatch()
-    const selectedDate = useAppSelector(state => state.footage.selectedDate)
+    const selectedDate = useAppSelector(selectSelectedDate)
 
     const { data: galleryDays = [], isLoading, isFetching, error } = useGalleryDays()
     const allowedDates: Date[] = galleryDays.map(day => new Date(day.dayKey))
@@ -28,7 +29,7 @@ export default function DateFilterRow() {
     const openSheet = () => sheetRef.current?.present()
 
     const handleSelect = (date: Date) => {
-        dispatch(footageActions.setSelectedDate(date))
+        dispatch(footageActions.setSelectedDate(date.toISOString()))
         sheetRef.current?.dismiss()
     }
 
@@ -49,7 +50,7 @@ export default function DateFilterRow() {
      */
     useEffect(() => {
         if (galleryDays.length && !isLoading && !isFetching && !error) {
-            dispatch(footageActions.setSelectedDate(allowedDates[0]))
+            dispatch(footageActions.setSelectedDate(allowedDates[0].toISOString()))
         }
     }, [galleryDays, isLoading, isFetching, error])
 
@@ -87,8 +88,10 @@ export default function DateFilterRow() {
                     ) : (
                         allowedDates.map((date, index) => {
                             const isSelected = selectedDate
-                                ? date.toDateString() === selectedDate.toDateString()
+                                ? date.toISOString().slice(0, 10) ===
+                                  selectedDate.toISOString().slice(0, 10)
                                 : false
+
                             return (
                                 <TouchableOpacity
                                     key={index}

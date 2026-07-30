@@ -10,3 +10,5 @@ export const store = configureStore({
         navigation: navigationReducer,
     },
 })
+
+export type RootState = ReturnType<typeof store.getState>

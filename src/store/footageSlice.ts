@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 export interface FootageState {
     pendingFootage: number
     downloadedFootage: number
-    selectedDate: Date | null
+    selectedDate: string | null
 }
 
 const initialState: FootageState = {
@@ -25,7 +25,7 @@ const footageSlice = createSlice({
         setDownloadedFootage(state, action: PayloadAction<number>) {
             state.downloadedFootage = action.payload
         },
-        setSelectedDate(state, action: PayloadAction<Date | null>) {
+        setSelectedDate(state, action: PayloadAction<string | null>) {
             state.selectedDate = action.payload
         },
     },
