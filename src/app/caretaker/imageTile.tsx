@@ -49,7 +49,14 @@ export default function ImageTile({ item, size }: Props) {
             accessibilityLabel={item.time ? `Memory at ${item.time}` : 'Memory image'}
             style={tileStyle}
             className="overflow-hidden rounded-lg active:opacity-90"
-            onPress={() => router.push(`/footage`)}
+            onPress={() => {
+                router.push({
+                    pathname: '/footage',
+                    params: {
+                        id: item.id,
+                    },
+                })
+            }}
         >
             {item.uri ? (
                 <Image source={{ uri: item.uri }} className="h-full w-full" resizeMode="cover" />

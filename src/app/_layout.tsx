@@ -1,9 +1,10 @@
 import '../../global.css'
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Provider } from 'react-redux'
 import AtkinsonBold from '../../assets/fonts/AtkinsonHyperlegibleNext-Bold.ttf'
@@ -24,6 +25,8 @@ export default function RootLayout() {
         'Atkinson Hyperlegible Next Bold': AtkinsonBold,
     })
 
+    const [queryClient] = useState(() => new QueryClient())
+
     useEffect(() => {
         initDatabase()
     }, [])
@@ -40,31 +43,33 @@ export default function RootLayout() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <Provider store={store}>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                >
-                    <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
-                    <Stack.Screen
-                        name="settings/index"
-                        options={{ title: 'Settings', animation: 'ios_from_right' }}
-                    />
-                    <Stack.Screen
-                        name="caretaker/index"
-                        options={{ title: 'Caretaker', animation: 'ios_from_left' }}
-                    />
-                    <Stack.Screen
-                        name="diary/index"
-                        options={{ title: 'Diary', animation: 'ios_from_left' }}
-                    />
-                    <Stack.Screen
-                        name="footage/index"
-                        options={{ title: 'View Footage', animation: 'ios_from_right' }}
-                    />
-                </Stack>
-            </Provider>
+            <QueryClientProvider client={queryClient}>
+                <Provider store={store}>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                        }}
+                    >
+                        <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
+                        <Stack.Screen
+                            name="settings/index"
+                            options={{ title: 'Settings', animation: 'ios_from_right' }}
+                        />
+                        <Stack.Screen
+                            name="caretaker/index"
+                            options={{ title: 'Caretaker', animation: 'ios_from_left' }}
+                        />
+                        <Stack.Screen
+                            name="diary/index"
+                            options={{ title: 'Diary', animation: 'ios_from_left' }}
+                        />
+                        <Stack.Screen
+                            name="footage/index"
+                            options={{ title: 'View Footage', animation: 'ios_from_right' }}
+                        />
+                    </Stack>
+                </Provider>
+            </QueryClientProvider>
         </GestureHandlerRootView>
     )
 }

@@ -11,25 +11,8 @@ import VideoSection from '@/app/caretaker/videoSection'
 import AppHeader from '@/components/appHeader'
 import DateFilterRow from '@/components/dateFilterRow'
 import { TimeFilter } from '@/types/filter'
-import { MediaItem } from '@/types/image'
 import { MediaTab } from '@/types/media'
 import { VideoGroup } from '@/types/video'
-
-const morningItems: MediaItem[] = [
-    { id: '1', time: '09:15 AM', badge: 'verified', uri: 'https://picsum.photos/seed/a1/200/200' },
-    { id: '2', time: '10:30 AM', badge: 'flagged', uri: 'https://picsum.photos/seed/a2/200/200' },
-    { id: '3', time: '11:00 AM', badge: 'none', uri: 'https://picsum.photos/seed/a3/200/200' },
-    { id: '4', time: '', badge: 'processing' },
-]
-
-const afternoonItems: MediaItem[] = [
-    { id: '5', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b1/200/200' },
-    { id: '6', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b2/200/200' },
-    { id: '7', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b3/200/200' },
-    { id: '8', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b4/200/200' },
-    { id: '9', time: '', badge: 'none', uri: 'https://picsum.photos/seed/b5/200/200' },
-    { id: '10', time: '', badge: 'none', overflow: 3 },
-]
 
 const videoGroups: VideoGroup[] = [
     {
@@ -102,12 +85,12 @@ export default function CaretakerScreen() {
                 {activeTab === 'images' ? (
                     <>
                         <View className="mt-7 px-8">
-                            <ImageSection title="Morning" items={morningItems} />
+                            <ImageSection title="Morning" dayKey={'2026-07-29'} />
                         </View>
 
-                        <View className="mt-8 px-8">
-                            <ImageSection title="Afternoon" items={afternoonItems} />
-                        </View>
+                        {/*<View className="mt-8 px-8">*/}
+                        {/*    <ImageSection title="Afternoon" dayKey={'2026-07-29'} />*/}
+                        {/*</View>*/}
                     </>
                 ) : (
                     <>

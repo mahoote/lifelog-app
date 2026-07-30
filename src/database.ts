@@ -21,7 +21,6 @@ export function initDatabase() {
             role TEXT NOT NULL,
             created_at TEXT NOT NULL,
             file_uri TEXT NOT NULL,
-            thumbnail_uri TEXT,
             size_bytes INTEGER NOT NULL,
             state TEXT NOT NULL,
             duration_s INTEGER,
@@ -55,5 +54,8 @@ export function initDatabase() {
 
         CREATE INDEX IF NOT EXISTS idx_footage_item_state_day
         ON footage_item(state, day_key);
+
+        CREATE INDEX IF NOT EXISTS idx_footage_item_capture_event
+        ON footage_item(capture_event_id);
     `)
 }
