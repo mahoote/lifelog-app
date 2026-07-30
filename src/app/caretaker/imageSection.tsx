@@ -2,8 +2,7 @@ import { Text, useWindowDimensions, View } from 'react-native'
 import ImageTile from '@/app/caretaker/imageTile'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 
-import { MediaItem } from '@/types/media'
-import { formatImageTime } from '@/utils/dateUtils'
+import { FootageItem } from '@/types/footageItem'
 
 interface Props {
     title: string
@@ -15,17 +14,10 @@ export default function ImageSection({ title, dayKey }: Props) {
     const { data: images = [], isLoading, isFetching, error } = useGalleryImages(dayKey)
 
     const tileSize = (width - 64 - 16) / 3
+    const galleryRows: FootageItem[][] = []
 
-    const items: MediaItem[] = images.map(image => ({
-        id: image.id,
-        uri: image.fileUri,
-        time: formatImageTime(image.createdAt),
-    }))
-
-    const rows: MediaItem[][] = []
-
-    for (let i = 0; i < items.length; i += 3) {
-        rows.push(items.slice(i, i + 3))
+    for (let i = 0; i < images.length; i += 3) {
+        galleryRows.push(images.slice(i, i + 3))
     }
 
     if (!dayKey) {
@@ -88,7 +80,7 @@ export default function ImageSection({ title, dayKey }: Props) {
         )
     }
 
-    if (items.length === 0) {
+    if (images.length === 0) {
         return (
             <View>
                 <Text className="mb-4 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
@@ -117,7 +109,7 @@ export default function ImageSection({ title, dayKey }: Props) {
             </View>
 
             <View className="gap-2">
-                {rows.map((row, rowIndex) => (
+                {galleryRows.map((row, rowIndex) => (
                     <View key={rowIndex} className="flex-row gap-2">
                         {row.map(item => (
                             <ImageTile key={item.id} item={item} size={tileSize} />
