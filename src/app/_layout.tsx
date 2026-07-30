@@ -1,5 +1,6 @@
 import '../../global.css'
 
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
@@ -45,33 +46,35 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <QueryClientProvider client={queryClient}>
                 <Provider store={store}>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                        }}
-                    >
-                        <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
-                        <Stack.Screen
-                            name="settings/index"
-                            options={{ title: 'Settings', animation: 'ios_from_right' }}
-                        />
-                        <Stack.Screen
-                            name="caretaker/index"
-                            options={{ title: 'Caretaker', animation: 'ios_from_left' }}
-                        />
-                        <Stack.Screen
-                            name="diary/index"
-                            options={{ title: 'Diary', animation: 'ios_from_left' }}
-                        />
-                        <Stack.Screen
-                            name="footage/index"
-                            options={{ title: 'View Footage', animation: 'ios_from_right' }}
-                        />
-                        <Stack.Screen
-                            name="debug/index"
-                            options={{ title: 'Debug', animation: 'none' }}
-                        />
-                    </Stack>
+                    <BottomSheetModalProvider>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                            }}
+                        >
+                            <Stack.Screen name="index" options={{ title: 'Lifelog' }} />
+                            <Stack.Screen
+                                name="settings/index"
+                                options={{ title: 'Settings', animation: 'ios_from_right' }}
+                            />
+                            <Stack.Screen
+                                name="caretaker/index"
+                                options={{ title: 'Caretaker', animation: 'ios_from_left' }}
+                            />
+                            <Stack.Screen
+                                name="diary/index"
+                                options={{ title: 'Diary', animation: 'ios_from_left' }}
+                            />
+                            <Stack.Screen
+                                name="footage/index"
+                                options={{ title: 'View Footage', animation: 'ios_from_right' }}
+                            />
+                            <Stack.Screen
+                                name="debug/index"
+                                options={{ title: 'Debug', animation: 'none' }}
+                            />
+                        </Stack>
+                    </BottomSheetModalProvider>
                 </Provider>
             </QueryClientProvider>
         </GestureHandlerRootView>

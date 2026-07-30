@@ -7,3 +7,10 @@ export function formatImageTime(createdAt: string): string {
         minute: '2-digit',
     })
 }
+export function formatDate(date: Date): string {
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    })
+}
