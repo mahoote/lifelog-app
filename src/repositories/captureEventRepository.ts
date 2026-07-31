@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system'
 import { db } from '@/database'
 import { refreshGalleryDaySync } from '@/repositories/galleryDayRepository'
 import { CaptureEvent, CaptureEventRow } from '@/types/captureEvent'
@@ -46,6 +47,23 @@ export function saveCaptureEvent(
 
                 if (!footageUri) {
                     console.warn(`Footage item ${footageItem.id} not found in downloads. Skipping.`)
+                    continue
+                }
+
+                const file = new File(footageUri)
+
+                if (!file.exists) {
+                    console.warn(
+                        `Downloaded footage item ${footageItem.id} is missing. Skipping db save.`,
+                    )
+                    continue
+                }
+
+                if (file.size <= 0) {
+                    console.warn(
+                        `Downloaded footage item ${footageItem.id} is empty. Deleting and skipping db save.`,
+                    )
+                    file.delete()
                     continue
                 }
 

@@ -77,11 +77,27 @@ export async function downloadFootageById(
         const file = new File(directory, originalFileName)
 
         if (file.exists) {
-            console.info(`Footage ${id} already exists at ${file.uri}. Skipping download.`)
-            return { uri: file.uri, continue: true }
+            if (file.size > 0) {
+                console.info(`Footage ${id} already exists at ${file.uri}. Skipping download.`)
+                return { uri: file.uri, continue: true }
+            }
+
+            console.warn(`Footage ${id} exists but is empty. Deleting and retrying download.`)
+            file.delete()
         }
 
         await File.downloadFileAsync(url, file)
+
+        if (!file.exists) {
+            console.warn(`Downloaded footage ${id}, but the file does not exist at ${file.uri}.`)
+            return { uri: null, continue: true }
+        }
+
+        if (file.size <= 0) {
+            console.warn(`Downloaded footage ${id}, but the file is empty. Discarding.`)
+            file.delete()
+            return { uri: null, continue: true }
+        }
 
         return { uri: file.uri, continue: true }
     } catch (error) {
