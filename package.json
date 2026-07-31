@@ -3,15 +3,16 @@
     "main": "expo-router/entry",
     "version": "0.0.0",
     "scripts": {
+        "start": "expo start --dev-client",
         "dev": "expo start",
         "dev:clear": "expo start -c",
-        "android": "expo start --android",
-        "ios": "expo start --ios",
-        "web": "expo start --web",
+        "android": "expo run:android",
         "lint": "eslint --fix src --ext .js,.jsx,.ts,.tsx",
         "format": "prettier --write .",
         "format:check": "prettier . --check",
-        "prepare": "husky"
+        "prepare": "husky",
+        "build:dev": "eas build --profile development --platform android",
+        "build:preview": "eas build --profile preview --platform android"
     },
     "lint-staged": {
         "src/**/*.{js,jsx,ts,tsx}": [
@@ -50,6 +51,7 @@
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "react-native": "0.85.3",
+        "react-native-fast-opencv": "^1.0.0",
         "react-native-gesture-handler": "~2.31.1",
         "react-native-reanimated": "4.3.1",
         "react-native-safe-area-context": "~5.7.0",

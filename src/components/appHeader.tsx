@@ -32,6 +32,7 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
         if (!health) {
             setSyncLoading(false)
             console.error('Not connected to glasses.')
+            router.replace('/settings')
             return
         }
 
