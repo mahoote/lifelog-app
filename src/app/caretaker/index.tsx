@@ -63,7 +63,7 @@ export default function CaretakerScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="pt-2">
-                    <AppHeader title="Caretaker" />
+                    <AppHeader title="Caretaker" variant="caretaker" />
                 </View>
 
                 <View className="mt-2">
