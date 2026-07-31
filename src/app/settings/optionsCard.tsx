@@ -1,4 +1,4 @@
-import { faArrowsRotate, faBug, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faBug, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
@@ -6,28 +6,17 @@ import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { deleteAllSavedFootage } from '@/utils/storageUtils'
 
-export default function SyncProcessCard() {
+export default function OptionsCard() {
     const router = useRouter()
     const queryClient = useQueryClient()
 
     return (
         <View className="mt-6 rounded-lg bg-surface-container-low px-6 py-7">
-            <View className="mb-5 flex-row items-center">
-                <View className="mr-4 h-12 w-12 items-center justify-center rounded-md bg-secondary-container">
-                    <FontAwesomeIcon icon={faArrowsRotate} size={20} color={colors.primary} />
-                </View>
-
-                <View className="flex-1">
-                    <Text className="font-atkinson-bold text-[18px] leading-[24px] text-on-surface">
-                        Sync &amp; Process
-                    </Text>
-                    <Text className="mt-1 font-atkinson text-[17px] leading-[24px] text-on-surface-variant">
-                        Download and organize footage
-                    </Text>
-                </View>
+            <View className="flex-1 mb-5">
+                <Text className="font-atkinson-bold text-[18px] leading-[24px] text-on-surface">
+                    Options
+                </Text>
             </View>
-
-            <View className="mb-5 h-2 rounded-full bg-surface-container-highest" />
 
             <View className="flex gap-2">
                 <Pressable

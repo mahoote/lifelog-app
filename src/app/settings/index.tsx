@@ -2,8 +2,8 @@ import { useRouter } from 'expo-router'
 import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import DeviceStatusCard from '@/app/settings/deviceStatusCard'
+import OptionsCard from '@/app/settings/optionsCard'
 import RoleSelector from '@/app/settings/roleSelector'
-import SyncProcessCard from '@/app/settings/syncProcessCard'
 import AppHeader from '@/components/appHeader'
 import { useAppSelector } from '@/store/hooks'
 
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
                     <AppHeader title="Settings" variant="settings" onBackPress={handleNavigate} />
                     <DeviceStatusCard />
                     <RoleSelector />
-                    <SyncProcessCard />
+                    <OptionsCard />
                 </View>
             </ScrollView>
         </SafeAreaView>
