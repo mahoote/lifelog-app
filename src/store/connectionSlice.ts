@@ -2,11 +2,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { LifelogHealth } from '@/types/lifelog'
 
 export interface ConnectionState {
+    ipAddress: string
     savedWifi: string | null
     wifiConnected: LifelogHealth | null
 }
 
 const initialState: ConnectionState = {
+    ipAddress: process.env.EXPO_PUBLIC_LIFELOG_API_IP ?? '',
     savedWifi: null,
     wifiConnected: null,
 }
@@ -15,6 +17,9 @@ const connectionSlice = createSlice({
     name: 'connection',
     initialState,
     reducers: {
+        setIpAddress: (state, action: PayloadAction<string>) => {
+            state.ipAddress = action.payload
+        },
         setSavedWifi(state, action: PayloadAction<string | null>) {
             state.savedWifi = action.payload
         },

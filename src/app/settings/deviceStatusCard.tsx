@@ -1,24 +1,29 @@
 import { faExclamation, faGlasses, faWifi } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, Text, TextInput, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
+
+const DEFAULT_DEVICE_IP = '10.191.100.218'
 
 export default function DeviceStatusCard() {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
 
     const [connectLoading, setConnectLoading] = useState(false)
+    const [deviceIp, setDeviceIp] = useState(DEFAULT_DEVICE_IP)
 
     /**
      * Fetches the current health of the lifelog api.
      * Sets the values to the store.
      */
-    const handleRefresh = async () => {
+    const handleConnect = async () => {
         setConnectLoading(true)
+
+        dispatch(connectionActions.setIpAddress(deviceIp.trim()))
 
         const health = await getLifelogHealth()
         dispatch(connectionActions.setWifiConnected(health))
@@ -64,12 +69,29 @@ export default function DeviceStatusCard() {
                             Connect to your glasses to sync today&apos;s memories.
                         </Text>
 
+                        <View className="mb-4 w-full">
+                            <Text className="mb-2 font-atkinson-bold text-[16px] text-on-surface">
+                                Glasses IP address
+                            </Text>
+                            <TextInput
+                                accessibilityLabel="Glasses IP address"
+                                value={deviceIp}
+                                onChangeText={setDeviceIp}
+                                placeholder="Enter IP address"
+                                placeholderTextColor={colors.onSurfaceVariant}
+                                keyboardType="numbers-and-punctuation"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                className="h-14 w-full rounded-lg border-2 border-surface-container-highest bg-surface px-4 font-atkinson text-[17px] text-on-surface"
+                            />
+                        </View>
+
                         <Pressable
                             accessibilityRole="button"
                             accessibilityLabel="Connect to Glasses WiFi"
-                            className="h-14 w-full flex-row gap-3 items-center justify-center rounded-full bg-primary px-5 active:bg-on-primary-container"
-                            onPress={() => void handleRefresh()}
-                            disabled={connectLoading}
+                            className="h-14 w-full flex-row gap-3 items-center justify-center rounded-full bg-primary px-5 active:bg-on-primary-container disabled:opacity-60"
+                            onPress={() => void handleConnect()}
+                            disabled={connectLoading || deviceIp.trim().length === 0}
                         >
                             {connectLoading ? (
                                 <Text className="font-atkinson-bold text-[17px] text-on-primary">
