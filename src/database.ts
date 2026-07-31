@@ -26,7 +26,7 @@ export function initDatabase() {
             duration_s INTEGER,
 
             imported_at TEXT NOT NULL,
-            day_key TEXT,
+            day_key TEXT NOT NULL,
             is_favorite INTEGER NOT NULL DEFAULT 0,
             notes TEXT,
             tags_json TEXT,
@@ -35,5 +35,27 @@ export function initDatabase() {
                 REFERENCES capture_event(id)
                 ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS gallery_day (
+            day_key TEXT PRIMARY KEY NOT NULL,
+            image_count INTEGER NOT NULL DEFAULT 0,
+            video_count INTEGER NOT NULL DEFAULT 0,
+            first_item_at TEXT,
+            last_item_at TEXT,
+            cover_image_uri TEXT,
+            updated_at TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_footage_item_day_created
+        ON footage_item(day_key, created_at);
+
+        CREATE INDEX IF NOT EXISTS idx_footage_item_type_day
+        ON footage_item(type, day_key);
+
+        CREATE INDEX IF NOT EXISTS idx_footage_item_state_day
+        ON footage_item(state, day_key);
+
+        CREATE INDEX IF NOT EXISTS idx_footage_item_capture_event
+        ON footage_item(capture_event_id);
     `)
 }

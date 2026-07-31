@@ -7,7 +7,7 @@ import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
 import { getLifelogHealth, getLifelogPendingFootage } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
-import { downloadActions } from '@/store/downloadSlice'
+import { footageActions } from '@/store/footageSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 interface Props {
@@ -43,8 +43,8 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
                 0,
             )
 
-            dispatch(downloadActions.setPendingFootage(pendingFootageCount))
-            dispatch(downloadActions.setDownloadedFootage(0))
+            dispatch(footageActions.setPendingFootage(pendingFootageCount))
+            dispatch(footageActions.setDownloadedFootage(0))
         }
 
         setSyncLoading(false)

@@ -1,5 +1,6 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
-import { saveCaptureEvent } from '@/repositories/lifelogRepository'
+import { saveCaptureEvent } from '@/repositories/captureEventRepository'
+import { getFootageItemById } from '@/repositories/footageItemRepository'
 import { downloadFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
@@ -14,7 +15,7 @@ import { CaptureEvent } from '@/types/captureEvent'
 export async function downloadCaptureEventsFootage(
     captureEvents: CaptureEvent[],
     dispatch: AppDispatch,
-    addDownloadedFootage: ActionCreatorWithPayload<number, 'download/addDownloadedFootage'>,
+    addDownloadedFootage: ActionCreatorWithPayload<number, 'footage/addDownloadedFootage'>,
 ): Promise<
     {
         captureEventId: string | null
@@ -68,6 +69,17 @@ export async function downloadCaptureEventFootage(
 
     for (const footageItem of captureEvent.footageItems) {
         if (!footageItem.id) {
+            continue
+        }
+
+        const existingFootageItem = await getFootageItemById(footageItem.id)
+
+        if (existingFootageItem?.fileUri) {
+            results.push({
+                id: footageItem.id,
+                uri: existingFootageItem.fileUri,
+                continue: true,
+            })
             continue
         }
 

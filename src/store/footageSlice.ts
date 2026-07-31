@@ -1,17 +1,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-export interface DownloadState {
+export interface FootageState {
     pendingFootage: number
     downloadedFootage: number
+    selectedDate: string | null
 }
 
-const initialState: DownloadState = {
+const initialState: FootageState = {
     pendingFootage: 0,
     downloadedFootage: 0,
+    selectedDate: null,
 }
 
-const downloadSlice = createSlice({
-    name: 'download',
+const footageSlice = createSlice({
+    name: 'footage',
     initialState,
     reducers: {
         setPendingFootage(state, action: PayloadAction<number>) {
@@ -23,11 +25,14 @@ const downloadSlice = createSlice({
         setDownloadedFootage(state, action: PayloadAction<number>) {
             state.downloadedFootage = action.payload
         },
+        setSelectedDate(state, action: PayloadAction<string | null>) {
+            state.selectedDate = action.payload
+        },
     },
 })
 
-export const downloadActions = downloadSlice.actions
-export const downloadReducer = downloadSlice.reducer
+export const footageActions = footageSlice.actions
+export const footageReducer = footageSlice.reducer
 
-void downloadActions
-void downloadReducer
+void footageActions
+void footageReducer

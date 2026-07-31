@@ -1,4 +1,4 @@
-import { mapFootageItem } from '@/mappers/footageMapper'
+import { mapResponseToFootageItem } from '@/mappers/footageMapper'
 import { CaptureEvent, CaptureEventResponse } from '@/types/captureEvent'
 
 /**
@@ -11,6 +11,6 @@ export function mapCaptureEvent(response: CaptureEventResponse): CaptureEvent {
         startedAt: response.started_at,
         endedAt: response.ended_at,
         motionState: response.motion_state,
-        footageItems: response.footage_items?.map(mapFootageItem) ?? null,
+        footageItems: response.footage_items?.map(mapResponseToFootageItem) ?? null,
     }
 }

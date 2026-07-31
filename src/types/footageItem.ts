@@ -46,7 +46,7 @@ export interface FootageItemRow {
     duration_s: number | null
     imported_at: string | null
     day_key: string | null
-    is_favorite: boolean
+    is_favorite: number
     notes: string | null
     tags_json: string | null
 }

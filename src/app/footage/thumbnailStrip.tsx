@@ -1,29 +1,51 @@
-import { useEffect, useRef } from 'react'
-import { Dimensions, Image, ScrollView, TouchableOpacity, View } from 'react-native'
+import { useEffect, useMemo, useRef } from 'react'
+import { Dimensions, Image, ScrollView, TouchableOpacity } from 'react-native'
+
+import { useGalleryImages } from '@/hooks/useGalleryImages'
 
 const THUMB_SIZE = 64
 const THUMB_GAP = 6
+const SIDE_PADDING = 16
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-interface FootageItem {
-    id: string
-    uri?: string
-}
-
 interface Props {
-    items: FootageItem[]
-    selectedIndex: number
-    onSelect: (index: number) => void
+    dayKey: string | null
+    selectedId: string | null
+    onSelect: (id: string) => void
 }
 
-export default function ThumbnailStrip({ items, selectedIndex, onSelect }: Props) {
+export default function ThumbnailStrip({ dayKey, selectedId, onSelect }: Props) {
     const scrollRef = useRef<ScrollView>(null)
 
-    useEffect(() => {
-        const offset = 16 + selectedIndex * (THUMB_SIZE + THUMB_GAP) - SCREEN_WIDTH / 2 + THUMB_SIZE / 2
+    const { data: images = [] } = useGalleryImages(dayKey)
 
-        scrollRef.current?.scrollTo({ x: Math.max(0, offset), animated: true })
+    const selectedIndex = useMemo(() => {
+        if (!selectedId) {
+            return -1
+        }
+
+        return images.findIndex(item => item.id === selectedId)
+    }, [images, selectedId])
+
+    useEffect(() => {
+        if (selectedIndex < 0) {
+            return
+        }
+
+        const offset =
+            SIDE_PADDING + selectedIndex * (THUMB_SIZE + THUMB_GAP) - SCREEN_WIDTH / 2 + THUMB_SIZE / 2
+
+        requestAnimationFrame(() => {
+            scrollRef.current?.scrollTo({
+                x: Math.max(0, offset),
+                animated: true,
+            })
+        })
     }, [selectedIndex])
+
+    if (!dayKey || images.length === 0) {
+        return null
+    }
 
     return (
         <ScrollView
@@ -31,36 +53,30 @@ export default function ThumbnailStrip({ items, selectedIndex, onSelect }: Props
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-                paddingHorizontal: 16,
+                paddingHorizontal: SIDE_PADDING,
                 gap: THUMB_GAP,
                 paddingVertical: 10,
             }}
             className="flex-grow-0"
         >
-            {items.map((item, index) => {
-                const isSelected = index === selectedIndex
+            {images.map(item => {
+                const isSelected = item.id === selectedId
+
                 return (
                     <TouchableOpacity
                         key={item.id}
                         activeOpacity={0.8}
-                        onPress={() => onSelect(index)}
+                        onPress={() => onSelect(item.id!)}
                         style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
                         className={`overflow-hidden rounded-md ${
                             isSelected ? 'border-2 border-primary' : 'border-2 border-transparent'
                         }`}
                     >
-                        {item.uri ? (
-                            <Image
-                                source={{ uri: item.uri }}
-                                style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-                                resizeMode="cover"
-                            />
-                        ) : (
-                            <View
-                                style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-                                className="bg-surface-container-highest"
-                            />
-                        )}
+                        <Image
+                            source={{ uri: item.fileUri }}
+                            style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+                            resizeMode="cover"
+                        />
                     </TouchableOpacity>
                 )
             })}

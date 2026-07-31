@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { connectionReducer } from './connectionSlice'
-import { downloadReducer } from './downloadSlice'
+import { footageReducer } from './footageSlice'
 import { navigationReducer } from './navigationSlice'
 
 export const store = configureStore({
     reducer: {
         connection: connectionReducer,
-        download: downloadReducer,
+        footage: footageReducer,
         navigation: navigationReducer,
     },
 })
+
+export type RootState = ReturnType<typeof store.getState>

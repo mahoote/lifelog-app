@@ -1,6 +1,8 @@
 import { db } from '@/database'
+import { refreshGalleryDaySync } from '@/repositories/galleryDayRepository'
 import { CaptureEvent, CaptureEventRow } from '@/types/captureEvent'
 import { FootageItem, FootageItemRow } from '@/types/footageItem'
+import { getDayKey } from '@/utils/dateUtils'
 
 export function saveCaptureEvent(
     captureEvent: CaptureEvent,
@@ -13,6 +15,9 @@ export function saveCaptureEvent(
                 error: new Error('Cannot save capture event without id'),
             }
         }
+
+        const changedDayKeys = new Set<string>()
+        const importedAt = new Date().toISOString()
 
         db.withTransactionSync(() => {
             db.runSync(
@@ -44,6 +49,9 @@ export function saveCaptureEvent(
                     continue
                 }
 
+                const dayKey = getDayKey(footageItem.createdAt)
+                changedDayKeys.add(dayKey)
+
                 db.runSync(
                     `
                     INSERT OR REPLACE INTO footage_item (
@@ -57,8 +65,12 @@ export function saveCaptureEvent(
                         size_bytes,
                         state,
                         duration_s,
-                        imported_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        imported_at,
+                        day_key,
+                        is_favorite,
+                        notes,
+                        tags_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     `,
                     [
                         footageItem.id,
@@ -70,10 +82,18 @@ export function saveCaptureEvent(
                         footageUri,
                         footageItem.sizeBytes,
                         footageItem.state,
-                        footageItem.durationS,
-                        new Date().toISOString(),
+                        footageItem.durationS ?? null,
+                        importedAt,
+                        dayKey,
+                        footageItem.isFavorite ?? 0,
+                        footageItem.notes ?? null,
+                        footageItem.tagsJson ?? null,
                     ],
                 )
+            }
+
+            for (const dayKey of changedDayKeys) {
+                refreshGalleryDaySync(dayKey)
             }
         })
 
@@ -92,11 +112,8 @@ export function saveCaptureEvent(
 }
 
 /**
- * Fetches all capture events from the database, along with their associated footage items.
- * The capture events are ordered by their start time in descending order, and the footage items
- * are ordered by their sequence index in ascending order.
- *
- * @returns An array of CaptureEvent objects, each containing its associated footage items.
+ * Keep this for debugging or for screens that genuinely need capture events.
+ * Do not use this for the gallery grid.
  */
 export function getCaptureEvents(): CaptureEvent[] {
     const captureEventRows = db.getAllSync<CaptureEventRow>(`
@@ -121,7 +138,11 @@ export function getCaptureEvents(): CaptureEvent[] {
             size_bytes,
             state,
             duration_s,
-            imported_at
+            imported_at,
+            day_key,
+            is_favorite,
+            notes,
+            tags_json
         FROM footage_item
         ORDER BY capture_event_id, sequence_index ASC;
     `)
@@ -133,7 +154,7 @@ export function getCaptureEvents(): CaptureEvent[] {
 
         const footageItem: FootageItem = {
             id: row.id,
-            captureEventId: captureEventId,
+            captureEventId,
             sequenceIndex: row.sequence_index,
             type: row.type,
             role: row.role,
@@ -144,16 +165,14 @@ export function getCaptureEvents(): CaptureEvent[] {
             durationS: row.duration_s,
             importedAt: row.imported_at,
             dayKey: row.day_key,
-            isFavorite: row.is_favorite,
+            isFavorite: row.is_favorite === 1,
             notes: row.notes,
             tagsJson: row.tags_json,
         }
 
-        if (captureEventId) {
-            const currentItems = footageItemsByCaptureEventId.get(captureEventId) ?? []
-            currentItems.push(footageItem)
-            footageItemsByCaptureEventId.set(captureEventId, currentItems)
-        }
+        const currentItems = footageItemsByCaptureEventId.get(captureEventId!) ?? []
+        currentItems.push(footageItem)
+        footageItemsByCaptureEventId.set(captureEventId!, currentItems)
     }
 
     return captureEventRows.map(row => ({

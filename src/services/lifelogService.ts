@@ -75,6 +75,12 @@ export async function downloadFootageById(
         }
 
         const file = new File(directory, originalFileName)
+
+        if (file.exists) {
+            console.info(`Footage ${id} already exists at ${file.uri}. Skipping download.`)
+            return { uri: file.uri, continue: true }
+        }
+
         await File.downloadFileAsync(url, file)
 
         return { uri: file.uri, continue: true }
