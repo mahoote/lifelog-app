@@ -168,6 +168,7 @@ export function getCaptureEvents(): CaptureEvent[] {
             isFavorite: row.is_favorite === 1,
             notes: row.notes,
             tagsJson: row.tags_json,
+            isProcessed: row.is_processed === 1,
         }
 
         const currentItems = footageItemsByCaptureEventId.get(captureEventId!) ?? []

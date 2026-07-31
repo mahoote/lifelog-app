@@ -24,12 +24,12 @@ export function initDatabase() {
             size_bytes INTEGER NOT NULL,
             state TEXT NOT NULL,
             duration_s INTEGER,
-
             imported_at TEXT NOT NULL,
             day_key TEXT NOT NULL,
             is_favorite INTEGER NOT NULL DEFAULT 0,
             notes TEXT,
             tags_json TEXT,
+            is_processed INTEGER NOT NULL DEFAULT 0,
 
             FOREIGN KEY (capture_event_id)
                 REFERENCES capture_event(id)

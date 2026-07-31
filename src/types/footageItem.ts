@@ -50,6 +50,7 @@ export interface FootageItemRow {
     is_favorite: number
     notes: string | null
     tags_json: string | null
+    is_processed: number
 }
 
 export interface FootageItem {
@@ -68,4 +69,5 @@ export interface FootageItem {
     isFavorite: boolean
     notes: string | null
     tagsJson: string | null
+    isProcessed: boolean
 }

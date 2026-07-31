@@ -24,6 +24,7 @@ export function mapResponseToFootageItem(response: FootageItemResponse): Footage
         isFavorite: false,
         notes: null,
         tagsJson: null,
+        isProcessed: false,
     }
 }
 export function mapRowToFootageItem(row: FootageItemRow): FootageItem {
@@ -43,6 +44,7 @@ export function mapRowToFootageItem(row: FootageItemRow): FootageItem {
         isFavorite: row.is_favorite === 1,
         notes: row.notes,
         tagsJson: row.tags_json,
+        isProcessed: row.is_processed === 1,
     }
 }
 export function mapFootageItemToDiaryEntry(item: FootageItem): DiaryEntry {
