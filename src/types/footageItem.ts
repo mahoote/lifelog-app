@@ -14,6 +14,7 @@ export enum FootageRole {
     BURST = 'burst',
     CANDIDATE = 'candidate',
     CONTEXT = 'context',
+    SELECTED = 'selected',
 }
 
 export interface FootageItemResponse {
