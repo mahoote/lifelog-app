@@ -76,6 +76,7 @@ export default function ImageSection() {
 
                 return (
                     <View key={label}>
+                        <Text>DEBUG: {images.length} images</Text>
                         <Text className="mb-3 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
                             {label}
                         </Text>

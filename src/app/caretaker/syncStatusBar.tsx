@@ -8,7 +8,7 @@ import { getLifelogPendingFootage } from '@/services/lifelogService'
 import { footageActions } from '@/store/footageSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { downloadCaptureEventsFootage } from '@/utils/downloadUtils'
-import { processUnprocessedFootageImages } from '@/utils/footageProcessing'
+import { processUnprocessedFootageImages, resetPhotoProcessing } from '@/utils/footageProcessing'
 import { invalidateQueries } from '@/utils/queryUtils'
 
 export default function SyncStatusBar() {
@@ -33,6 +33,9 @@ export default function SyncStatusBar() {
 
         if (captureEvents.length) {
             setIsDownloading(true)
+
+            // TODO: Remove this. It's for debug.
+            await resetPhotoProcessing()
 
             const pendingFootageCount = captureEvents.reduce(
                 (total, event) => total + (event.footageItems?.length ?? 0),

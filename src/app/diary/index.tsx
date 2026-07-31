@@ -143,6 +143,7 @@ export default function DiaryScreen() {
                 {currentEntry ? (
                     <>
                         <View className="mt-6 px-8">
+                            <Text>DEBUG: {entries.length} images</Text>
                             <SlideshowImage entry={currentEntry} />
                         </View>
 

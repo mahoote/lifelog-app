@@ -30,11 +30,18 @@ export default function SettingsScreen() {
     }
 
     useEffect(() => {
+        let isMounted = true
+
         const handleHealthCheck = async () => {
+            if (!isMounted) return
             const health = await getLifelogHealth()
             dispatch(connectionActions.setWifiConnected(health))
         }
         void handleHealthCheck()
+
+        return () => {
+            isMounted = false
+        }
     }, [dispatch])
 
     return (
