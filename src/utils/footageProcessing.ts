@@ -1,23 +1,20 @@
-import { Image } from 'react-native'
+import { File } from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
+import { BorderTypes, ColorConversionCodes, DataTypes, Mat, OpenCV } from 'react-native-fast-opencv'
 
 import { db } from '@/database'
 import { mapRowToFootageItem } from '@/mappers/footageMapper'
+import { rebuildGalleryDays } from '@/repositories/galleryDayRepository'
 import { FootageItem, FootageItemRow, FootageRole, FootageType } from '@/types/footageItem'
 
 /**
- * Result from the first version of the image quality check.
+ * Result from the OpenCV image quality check.
  *
- * This is intentionally simple for now. The later version can replace this
- * with blur detection, for example Laplacian variance through OpenCV or a
- * local helper service.
+ * The main score is blurScore, calculated with variance of Laplacian.
+ * A higher blurScore means the image is sharper.
  */
 export interface ImageQualityResult {
-    width: number
-    height: number
-    megapixels: number
-    sizeBytes: number
-    resolutionScore: number
-    fileSizeScore: number
+    blurScore: number
     qualityScore: number
     passes: boolean
     reason: string | null
@@ -30,87 +27,158 @@ export interface ProcessFootageResult {
     processedCount: number
     selectedCount: number
     failedCount: number
+    deletedInvalidCount: number
 }
 
-// First-version thresholds. These are prototype values, not clinically or
-// experimentally validated values.
-const MIN_WIDTH = 640
-const MIN_HEIGHT = 480
-const MIN_SIZE_BYTES = 40_000
-const MIN_QUALITY_SCORE = 0.55
+// Prototype threshold for variance of Laplacian. This must be tuned against
+// your own lifelog images. Raise this if too many blurry images pass.
+const MIN_BLUR_SCORE = 120
 
 /**
- * Reads the pixel dimensions of an image through React Native.
+ * Ensures the stored image path is a file URI that Expo FileSystem can read.
+ */
+function normaliseImageUri(fileUri: string): string {
+    return fileUri.startsWith('file://') ? fileUri : `file://${fileUri}`
+}
+
+/**
+ * Checks whether a footage item points to a real non-empty local file.
+ */
+function isValidLocalFile(fileUri: string): boolean {
+    const file = new File(normaliseImageUri(fileUri))
+    return file.exists && file.size > 0
+}
+
+/**
+ * Deletes local footage_item rows that point to missing or empty files.
  *
- * Image.getSize works for local file URIs and remote URIs. In this app the
- * expected input is the local file_uri stored in footage_item.
+ * This protects OpenCV from receiving invalid files. It also cleans up rows
+ * created before the download validation was added.
  */
-function getImageSize(uri: string): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-        Image.getSize(
-            uri,
-            (width, height) => resolve({ width, height }),
-            error => {
-                const message = typeof error === 'string' ? error : 'Failed to read image size.'
-                reject(error instanceof Error ? error : new Error(message))
-            },
+async function deleteInvalidFootageRows(): Promise<number> {
+    const rows = await db.getAllAsync<{ id: string; file_uri: string }>(`
+        SELECT id, file_uri
+        FROM footage_item
+        WHERE type = 'photo';
+    `)
+
+    let deletedCount = 0
+
+    for (const row of rows) {
+        const file = new File(normaliseImageUri(row.file_uri))
+
+        if (file.exists && file.size > 0) {
+            continue
+        }
+
+        if (file.exists) {
+            file.delete()
+        }
+
+        await db.runAsync(
+            `
+            DELETE FROM footage_item
+            WHERE id = ?;
+            `,
+            [row.id],
         )
-    })
+
+        deletedCount += 1
+        console.warn(`Deleted invalid footage row ${row.id}`)
+    }
+
+    if (deletedCount > 0) {
+        await rebuildGalleryDays()
+    }
+
+    return deletedCount
 }
 
 /**
- * Keeps a score inside the 0 to 1 range.
+ * Reads the first numeric value from a Mat returned by OpenCV.
  */
-function clamp01(value: number): number {
-    return Math.max(0, Math.min(1, value))
+function getFirstMatValue(mat: Mat): number {
+    const { buffer } = mat.toBuffer('float32')
+    return buffer[0] ?? 0
+}
+
+/**
+ * Converts a local JPEG file to raw Base64 for OpenCV decoding.
+ */
+async function readImageAsBase64(fileUri: string): Promise<string> {
+    const imageUri = normaliseImageUri(fileUri)
+    const file = new File(imageUri)
+    if (!file.exists) {
+        throw new Error(`Image file does not exist: ${imageUri}`)
+    }
+
+    if (file.size <= 0) {
+        throw new Error(`Image file is empty: ${imageUri}`)
+    }
+
+    const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+    })
+
+    if (!base64 || base64.length === 0) {
+        throw new Error(`Image file produced empty Base64: ${imageUri}`)
+    }
+
+    return base64
+}
+
+/**
+ * Calculates image sharpness using variance of Laplacian.
+ *
+ * Flow:
+ * 1. Read the image file as Base64.
+ * 2. Decode it into an OpenCV Mat.
+ * 3. Convert it to grayscale.
+ * 4. Apply the Laplacian operator.
+ * 5. Calculate the standard deviation of the Laplacian result.
+ * 6. Square the standard deviation to get variance.
+ */
+async function calculateLaplacianVariance(fileUri: string): Promise<number> {
+    const base64 = await readImageAsBase64(fileUri)
+
+    const src = Mat.createFromBase64(base64)
+    const gray = Mat.create()
+    const laplacian = Mat.create()
+    const mean = Mat.create()
+    const stddev = Mat.create()
+
+    try {
+        if (src.rows === 0 || src.cols === 0) {
+            throw new Error(`OpenCV decoded an empty image. rows=${src.rows}, cols=${src.cols}`)
+        }
+
+        OpenCV.cvtColor(src, gray, ColorConversionCodes.COLOR_BGR2GRAY)
+        OpenCV.Laplacian(gray, laplacian, DataTypes.CV_64F, 1, 1, 0, BorderTypes.BORDER_DEFAULT)
+        OpenCV.meanStdDev(laplacian, mean, stddev)
+
+        const standardDeviation = getFirstMatValue(stddev)
+        return standardDeviation * standardDeviation
+    } finally {
+        src.release()
+        gray.release()
+        laplacian.release()
+        mean.release()
+        stddev.release()
+    }
 }
 
 /**
  * Performs the current image quality check for one footage item.
- *
- * Current checks:
- * - minimum image resolution
- * - minimum file size
- * - simple combined quality score
- *
- * The guide recommends blur, exposure, content and quality scores. This first
- * implementation only covers the quality gate that can be done without adding
- * native OpenCV or AI dependencies.
  */
 async function checkImageQuality(item: FootageItem): Promise<ImageQualityResult> {
-    const { width, height } = await getImageSize(item.fileUri)
-    const megapixels = (width * height) / 1_000_000
-
-    // Resolution score rewards images up to roughly 1280 by 720.
-    const resolutionScore = clamp01(Math.min(width / 1280, height / 720))
-
-    // File size is used as a rough proxy for whether the image has enough data.
-    // It does not prove sharpness, but it catches very small or broken files.
-    const fileSizeScore = clamp01(item.sizeBytes / 250_000)
-
-    // Weighted quality score for the prototype version.
-    const qualityScore = 0.7 * resolutionScore + 0.3 * fileSizeScore
-
-    let reason: string | null = null
-
-    if (width < MIN_WIDTH || height < MIN_HEIGHT) {
-        reason = 'Image resolution is too low.'
-    } else if (item.sizeBytes < MIN_SIZE_BYTES) {
-        reason = 'Image file size is too small.'
-    } else if (qualityScore < MIN_QUALITY_SCORE) {
-        reason = 'Image quality score is too low.'
-    }
+    const blurScore = await calculateLaplacianVariance(item.fileUri)
+    const passes = blurScore >= MIN_BLUR_SCORE
 
     return {
-        width,
-        height,
-        megapixels,
-        sizeBytes: item.sizeBytes,
-        resolutionScore,
-        fileSizeScore,
-        qualityScore,
-        passes: reason === null,
-        reason,
+        blurScore,
+        qualityScore: blurScore,
+        passes,
+        reason: passes ? null : 'Image is too blurry.',
     }
 }
 
@@ -154,8 +222,6 @@ async function getUnprocessedPhotoItems(): Promise<FootageItem[]> {
 
 /**
  * Marks a footage item as processed.
- *
- * The note is optional. Existing notes are kept if no new note is provided.
  */
 async function setItemProcessed(id: string, notes: string | null = null): Promise<void> {
     await db.runAsync(
@@ -185,10 +251,6 @@ async function setItemRole(id: string, role: FootageRole): Promise<void> {
 
 /**
  * Groups footage items by their capture event.
- *
- * This supports the burst-photo logic where one representative photo should be
- * selected for each event. If an item does not have a capture_event_id, it is
- * processed as its own group so the processing function still completes.
  */
 function groupByCaptureEvent(items: FootageItem[]): Map<string, FootageItem[]> {
     const groups = new Map<string, FootageItem[]>()
@@ -204,21 +266,31 @@ function groupByCaptureEvent(items: FootageItem[]): Map<string, FootageItem[]> {
 }
 
 /**
+ * Resets photo processing while tuning the threshold or debugging OpenCV.
+ *
+ * Do not call this in normal app flow.
+ */
+export async function resetPhotoProcessing(): Promise<void> {
+    await db.runAsync(`
+        UPDATE footage_item
+        SET is_processed = 0,
+            role = CASE
+                WHEN role = 'selected' THEN 'candidate'
+                ELSE role
+            END
+        WHERE type = 'photo';
+    `)
+}
+
+/**
  * Processes every unprocessed photo in footage_item.
  *
- * Pipeline:
- * 1. Load all unprocessed photos with role burst or candidate.
- * 2. Group them by capture_event_id.
- * 3. Run the current image quality check for each photo.
- * 4. Select the highest scoring passing image in each event.
- * 5. Change that image role to selected.
- * 6. Keep the other images as burst.
- * 7. Mark every attempted image as processed.
- *
- * This function does not run AI labelling yet. It only performs the first
- * quality-selection step from the local vision pipeline guide.
+ * Invalid local files are deleted before processing, so OpenCV only receives
+ * existing non-empty files. Within each capture event, the sharpest passing
+ * image is marked as selected and the rest remain burst images.
  */
 export async function processUnprocessedFootageImages(): Promise<ProcessFootageResult> {
+    const deletedInvalidCount = await deleteInvalidFootageRows()
     const items = await getUnprocessedPhotoItems()
     const groups = groupByCaptureEvent(items)
 
@@ -229,27 +301,36 @@ export async function processUnprocessedFootageImages(): Promise<ProcessFootageR
     for (const group of groups.values()) {
         const scoredItems: { item: FootageItem; quality: ImageQualityResult }[] = []
 
-        // Score each image independently. If scoring fails, mark that item as
-        // processed so it does not block future processing runs forever.
         for (const item of group) {
             if (!item.id) continue
+
+            if (!isValidLocalFile(item.fileUri)) {
+                failedCount += 1
+                await setItemRole(item.id, FootageRole.BURST)
+                await setItemProcessed(item.id, 'Skipped invalid or empty image file.')
+                continue
+            }
 
             try {
                 const quality = await checkImageQuality(item)
                 scoredItems.push({ item, quality })
-            } catch {
+            } catch (error) {
                 failedCount += 1
-                await setItemProcessed(item.id, 'Image quality check failed.')
+                console.error('OpenCV image quality check failed', {
+                    id: item.id,
+                    fileUri: item.fileUri,
+                    error,
+                })
+                await setItemRole(item.id, FootageRole.BURST)
+                await setItemProcessed(item.id, 'OpenCV image quality check failed.')
             }
         }
 
-        // Pick the best passing image for this event. If none pass, no image is
-        // selected and all scored images remain burst items.
-        const passingItems = scoredItems
-            .filter(result => result.quality.passes)
-            .sort((a, b) => b.quality.qualityScore - a.quality.qualityScore)
-
-        const selectedItem = passingItems[0]?.item ?? null
+        const sortedItems = [...scoredItems].sort(
+            (a, b) => b.quality.qualityScore - a.quality.qualityScore,
+        )
+        const bestItem = sortedItems[0] ?? null
+        const selectedItem = bestItem?.quality.passes ? bestItem.item : null
 
         for (const { item, quality } of scoredItems) {
             if (!item.id) continue
@@ -262,8 +343,8 @@ export async function processUnprocessedFootageImages(): Promise<ProcessFootageR
             }
 
             const qualityNote = quality.passes
-                ? `Quality check passed. Score: ${quality.qualityScore.toFixed(2)}.`
-                : `Quality check failed. ${quality.reason}`
+                ? `Blur check passed. Laplacian variance: ${quality.blurScore.toFixed(2)}.`
+                : `Blur check failed. Laplacian variance: ${quality.blurScore.toFixed(2)}.`
 
             await setItemProcessed(item.id, qualityNote)
             processedCount += 1
@@ -274,5 +355,6 @@ export async function processUnprocessedFootageImages(): Promise<ProcessFootageR
         processedCount,
         selectedCount,
         failedCount,
+        deletedInvalidCount,
     }
 }
