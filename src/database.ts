@@ -24,12 +24,13 @@ export function initDatabase() {
             size_bytes INTEGER NOT NULL,
             state TEXT NOT NULL,
             duration_s INTEGER,
+
             imported_at TEXT NOT NULL,
             day_key TEXT NOT NULL,
             is_favorite INTEGER NOT NULL DEFAULT 0,
+            is_processed INTEGER NOT NULL DEFAULT 0,
             notes TEXT,
             tags_json TEXT,
-            is_processed INTEGER NOT NULL DEFAULT 0,
 
             FOREIGN KEY (capture_event_id)
                 REFERENCES capture_event(id)
@@ -58,4 +59,19 @@ export function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_footage_item_capture_event
         ON footage_item(capture_event_id);
     `)
+
+    migrateDatabase()
+}
+
+function migrateDatabase() {
+    addColumnIfMissing('footage_item', 'is_processed', 'INTEGER NOT NULL DEFAULT 0')
+}
+
+function addColumnIfMissing(tableName: string, columnName: string, columnDefinition: string) {
+    const columns = db.getAllSync<{ name: string }>(`PRAGMA table_info(${tableName});`)
+    const hasColumn = columns.some(column => column.name === columnName)
+
+    if (hasColumn) return
+
+    db.execSync(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`)
 }
