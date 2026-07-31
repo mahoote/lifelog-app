@@ -1,5 +1,7 @@
+import { DateOption, TimeOfDay } from '@/types/date'
 import { FootageItem } from '@/types/footageItem'
-import { TimeOfDay } from '@/types/galleryDay'
+
+import { GalleryDay } from '@/types/galleryDay'
 
 export function getDayKey(isoDate: string): string {
     return isoDate.slice(0, 10)
@@ -41,4 +43,32 @@ export function groupByTimeOfDay(images: FootageItem[]): { label: TimeOfDay; ite
     }
 
     return order.filter(label => map.has(label)).map(label => ({ label, items: map.get(label)! }))
+}
+export function formatDateOption(day: GalleryDay): DateOption {
+    const date = new Date(`${day.dayKey}T00:00:00`)
+    const todayKey = new Date().toISOString().slice(0, 10)
+
+    return {
+        id: day.dayKey,
+        label:
+            day.dayKey === todayKey ? 'Today' : date.toLocaleDateString('en-GB', { weekday: 'short' }),
+        day: date.getDate(),
+        month: date.toLocaleDateString('en-GB', { month: 'short' }),
+    }
+}
+
+export function formatDiaryDatetime(createdAt: string): string {
+    const date = new Date(createdAt)
+    const datePart = date.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    })
+    const timePart = date.toLocaleTimeString('en-GB', {
+        hour: 'numeric',
+        minute: '2-digit',
+    })
+
+    return `${datePart} • ${timePart}`
 }

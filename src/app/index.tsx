@@ -6,3 +6,4 @@ export default function Index() {
 
     return <Redirect href={wifiConnected ? '/caretaker' : '/settings'} />
 }
+export { DateOption } from '@/types/date'
