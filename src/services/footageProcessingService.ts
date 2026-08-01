@@ -55,7 +55,9 @@ export async function processUnprocessedFootageItems(): Promise<ImageProcessingS
     }
 
     const selectedItems = selectBestRepresentatives(analyzedItems)
-    const selectedIds = new Set(selectedItems.map(({ item }) => item.id).filter(Boolean))
+    const selectedIds = new Set(
+        selectedItems.map(({ item }) => item.id).filter((id): id is string => Boolean(id)),
+    )
 
     for (const analyzedItem of analyzedItems) {
         const itemId = analyzedItem.item.id
