@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 interface Props {
     title: string
-    variant?: 'default' | 'settings'
+    variant?: 'default' | 'settings' | 'caretaker'
     onBackPress?: () => void
 }
 
@@ -32,6 +32,7 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
         if (!health) {
             setSyncLoading(false)
             console.error('Not connected to glasses.')
+            router.replace('/settings')
             return
         }
 
@@ -66,7 +67,7 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
             <Text className="font-atkinson-bold text-[22px] leading-[26px] text-primary">{title}</Text>
 
             <View className="flex-row items-center gap-4">
-                {wifiConnected && (
+                {wifiConnected && variant === 'caretaker' && (
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Sync memories"

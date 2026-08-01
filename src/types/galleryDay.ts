@@ -1,5 +1,3 @@
-export type TimeOfDay = 'Morning' | 'Afternoon' | 'Evening' | 'Night'
-
 export interface GalleryDay {
     dayKey: string
     imageCount: number

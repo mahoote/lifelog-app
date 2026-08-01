@@ -67,7 +67,7 @@ export default function FootageScreen() {
                     <MomentDescription
                         title="Image"
                         description={
-                            current?.notes ??
+                            current?.description ??
                             'This image is used only as context for the memory and does not have a description.'
                         }
                     />

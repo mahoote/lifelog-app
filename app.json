@@ -17,7 +17,8 @@
                 "backgroundImage": "./assets/images/android-icon-background.png",
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
-            "predictiveBackGestureEnabled": false
+            "predictiveBackGestureEnabled": false,
+            "package": "dev.teigen.lifelogapp"
         },
         "web": {
             "output": "static",
@@ -35,11 +36,18 @@
                     }
                 }
             ],
-            "expo-font"
+            "expo-font",
+            "expo-asset"
         ],
         "experiments": {
             "typedRoutes": true,
             "reactCompiler": true
+        },
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": "751d9aaf-00d5-4703-b05b-059bedbfe239"
+            }
         }
     }
 }

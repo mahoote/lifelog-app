@@ -1,4 +1,5 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
+import { File } from 'expo-file-system'
 import { saveCaptureEvent } from '@/repositories/captureEventRepository'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
 import { downloadFootageById } from '@/services/lifelogService'
@@ -27,12 +28,11 @@ export async function downloadCaptureEventsFootage(
     for (const captureEvent of captureEvents) {
         const downloads = await downloadCaptureEventFootage(captureEvent)
 
-        dispatch(addDownloadedFootage(downloads.length))
+        const validDownloads = downloads.filter(download => download.uri !== null)
 
-        const result = saveCaptureEvent(
-            captureEvent,
-            downloads.filter(download => download.uri !== null) as { id: string; uri: string }[],
-        )
+        dispatch(addDownloadedFootage(validDownloads.length))
+
+        const result = saveCaptureEvent(captureEvent, validDownloads as { id: string; uri: string }[])
 
         if (!result.success || result.error) {
             console.error(`Save to db success: ${result.success}, Error: ${result.error}`)
@@ -75,12 +75,27 @@ export async function downloadCaptureEventFootage(
         const existingFootageItem = await getFootageItemById(footageItem.id)
 
         if (existingFootageItem?.fileUri) {
-            results.push({
-                id: footageItem.id,
-                uri: existingFootageItem.fileUri,
-                continue: true,
-            })
-            continue
+            const existingFile = new File(existingFootageItem.fileUri)
+
+            if (existingFile.exists && existingFile.size > 0) {
+                results.push({
+                    id: footageItem.id,
+                    uri: existingFootageItem.fileUri,
+                    continue: true,
+                })
+                continue
+            }
+
+            if (existingFile.exists) {
+                console.warn(
+                    `Existing footage item ${footageItem.id} points to an empty file. Deleting and retrying download.`,
+                )
+                existingFile.delete()
+            } else {
+                console.warn(
+                    `Existing footage item ${footageItem.id} points to a missing file. Retrying download.`,
+                )
+            }
         }
 
         const result = await downloadFootageById(

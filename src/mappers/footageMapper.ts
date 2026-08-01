@@ -1,4 +1,6 @@
+import { DiaryEntry } from '@/types/diary'
 import { FootageItem, FootageItemResponse, FootageItemRow } from '@/types/footageItem'
+import { formatDate, formatDiaryDatetime } from '@/utils/dateUtils'
 
 /**
  * Maps the FootageItemResponse from the API to the FootageItem used in the app.
@@ -20,8 +22,10 @@ export function mapResponseToFootageItem(response: FootageItemResponse): Footage
         importedAt: null,
         dayKey: null,
         isFavorite: false,
-        notes: null,
+        title: null,
+        description: null,
         tagsJson: null,
+        isProcessed: false,
     }
 }
 export function mapRowToFootageItem(row: FootageItemRow): FootageItem {
@@ -39,7 +43,18 @@ export function mapRowToFootageItem(row: FootageItemRow): FootageItem {
         importedAt: row.imported_at,
         dayKey: row.day_key,
         isFavorite: row.is_favorite === 1,
-        notes: row.notes,
+        title: row.title,
+        description: row.description,
         tagsJson: row.tags_json,
+        isProcessed: row.is_processed === 1,
+    }
+}
+export function mapFootageItemToDiaryEntry(item: FootageItem): DiaryEntry {
+    return {
+        id: item.id ?? `${item.createdAt}-${item.sequenceIndex}`,
+        title: formatDate(new Date(item.createdAt)),
+        caption: item.description ?? 'Selected memory from this day.',
+        uri: item.fileUri,
+        datetime: formatDiaryDatetime(item.createdAt),
     }
 }

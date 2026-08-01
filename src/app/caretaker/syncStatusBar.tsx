@@ -18,6 +18,7 @@ export default function SyncStatusBar() {
     const downloadedFootage = useAppSelector(state => state.footage.downloadedFootage)
 
     const [processLoading, setProcessLoading] = useState<boolean>(false)
+    const [isDownloading, setIsDownloading] = useState<boolean>(false)
 
     /**
      * Downloads all pending footage from the lifelog api.
@@ -30,6 +31,8 @@ export default function SyncStatusBar() {
         const captureEvents = await getLifelogPendingFootage()
 
         if (captureEvents.length) {
+            setIsDownloading(true)
+
             const pendingFootageCount = captureEvents.reduce(
                 (total, event) => total + (event.footageItems?.length ?? 0),
                 0,
@@ -43,6 +46,10 @@ export default function SyncStatusBar() {
                 dispatch,
                 footageActions.addDownloadedFootage,
             )
+
+            setIsDownloading(false)
+
+            // TODO: Process images
 
             // When all the footage have been downloaded
             await invalidateQueries(queryClient)
@@ -64,7 +71,11 @@ export default function SyncStatusBar() {
                         {pendingFootage} {processLoading ? 'Processing...' : 'New Items'}
                     </Text>
                     <Text className="font-atkinson text-[14px] leading-[18px] text-on-primary-fixed-variant">
-                        Processed: {downloadedFootage}
+                        {!processLoading
+                            ? 'Ready to process'
+                            : isDownloading
+                              ? `Downloaded: ${downloadedFootage} items`
+                              : 'Selecting best images'}
                     </Text>
                 </View>
             </View>

@@ -3,15 +3,16 @@
     "main": "expo-router/entry",
     "version": "0.0.0",
     "scripts": {
+        "start": "expo start --dev-client",
         "dev": "expo start",
         "dev:clear": "expo start -c",
-        "android": "expo start --android",
-        "ios": "expo start --ios",
-        "web": "expo start --web",
+        "android": "expo run:android",
         "lint": "eslint --fix src --ext .js,.jsx,.ts,.tsx",
         "format": "prettier --write .",
         "format:check": "prettier . --check",
-        "prepare": "husky"
+        "prepare": "husky",
+        "build:dev": "eas build --profile development --platform android",
+        "build:preview": "eas build --profile preview --platform android"
     },
     "lint-staged": {
         "src/**/*.{js,jsx,ts,tsx}": [
@@ -32,7 +33,9 @@
         "@reduxjs/toolkit": "^2.12.0",
         "@tanstack/react-query": "^5.101.4",
         "expo": "~56.0.13",
+        "expo-asset": "~56.0.21",
         "expo-constants": "~56.0.18",
+        "expo-dev-client": "~56.0.24",
         "expo-device": "~56.0.4",
         "expo-file-system": "~56.0.8",
         "expo-font": "~56.0.7",

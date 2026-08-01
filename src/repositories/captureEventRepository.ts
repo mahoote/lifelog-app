@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system'
 import { db } from '@/database'
 import { refreshGalleryDaySync } from '@/repositories/galleryDayRepository'
 import { CaptureEvent, CaptureEventRow } from '@/types/captureEvent'
@@ -49,6 +50,23 @@ export function saveCaptureEvent(
                     continue
                 }
 
+                const file = new File(footageUri)
+
+                if (!file.exists) {
+                    console.warn(
+                        `Downloaded footage item ${footageItem.id} is missing. Skipping db save.`,
+                    )
+                    continue
+                }
+
+                if (file.size <= 0) {
+                    console.warn(
+                        `Downloaded footage item ${footageItem.id} is empty. Deleting and skipping db save.`,
+                    )
+                    file.delete()
+                    continue
+                }
+
                 const dayKey = getDayKey(footageItem.createdAt)
                 changedDayKeys.add(dayKey)
 
@@ -86,7 +104,7 @@ export function saveCaptureEvent(
                         importedAt,
                         dayKey,
                         footageItem.isFavorite ?? 0,
-                        footageItem.notes ?? null,
+                        footageItem.description ?? null,
                         footageItem.tagsJson ?? null,
                     ],
                 )
@@ -166,8 +184,10 @@ export function getCaptureEvents(): CaptureEvent[] {
             importedAt: row.imported_at,
             dayKey: row.day_key,
             isFavorite: row.is_favorite === 1,
-            notes: row.notes,
+            title: row.title,
+            description: row.description,
             tagsJson: row.tags_json,
+            isProcessed: row.is_processed === 1,
         }
 
         const currentItems = footageItemsByCaptureEventId.get(captureEventId!) ?? []

@@ -14,6 +14,7 @@ export enum FootageRole {
     BURST = 'burst',
     CANDIDATE = 'candidate',
     CONTEXT = 'context',
+    SELECTED = 'selected',
 }
 
 export interface FootageItemResponse {
@@ -47,8 +48,10 @@ export interface FootageItemRow {
     imported_at: string | null
     day_key: string | null
     is_favorite: number
-    notes: string | null
+    title: string | null
+    description: string | null
     tags_json: string | null
+    is_processed: number
 }
 
 export interface FootageItem {
@@ -65,6 +68,8 @@ export interface FootageItem {
     importedAt: string | null
     dayKey: string | null
     isFavorite: boolean
-    notes: string | null
+    title: string | null
+    description: string | null
     tagsJson: string | null
+    isProcessed: boolean
 }
