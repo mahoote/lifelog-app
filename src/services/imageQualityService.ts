@@ -80,81 +80,94 @@ async function readImageAsBase64(fileUri: string): Promise<string> {
 }
 
 function toGrayscale(source: Mat): Mat {
-    const grayscale = Mat.create()
+    const sourceBuffer = source.toBuffer('uint8')
+    const grayscale = Mat.create(sourceBuffer.rows, sourceBuffer.cols, DataTypes.CV_8U)
 
-    OpenCV.cvtColor(source, grayscale, ColorConversionCodes.COLOR_BGR2GRAY)
+    if (sourceBuffer.channels === 1) {
+        return OpenCV.clone(source)
+    }
 
-    return grayscale
+    if (sourceBuffer.channels === 4) {
+        OpenCV.cvtColor(source, grayscale, ColorConversionCodes.COLOR_RGBA2GRAY)
+        return grayscale
+    }
+
+    if (sourceBuffer.channels === 3) {
+        OpenCV.cvtColor(source, grayscale, ColorConversionCodes.COLOR_RGB2GRAY)
+        return grayscale
+    }
+
+    grayscale.release()
+
+    throw new Error(`Unsupported image channel count: ${sourceBuffer.channels}`)
 }
 
 function calculateLaplacianVariance(grayscale: Mat): number {
-    const laplacian = Mat.create()
+    const targetWidth = 640
+    const targetHeight = 360
+
+    const resized = Mat.create(targetHeight, targetWidth, DataTypes.CV_8U)
+
+    const laplacian16 = Mat.create(targetHeight, targetWidth, DataTypes.CV_16S)
+    const laplacianAbs = Mat.create(targetHeight, targetWidth, DataTypes.CV_8U)
 
     try {
-        OpenCV.Laplacian(grayscale, laplacian, DataTypes.CV_64F, 1, 1, 0, BorderTypes.BORDER_DEFAULT)
+        OpenCV.resize(grayscale, resized, Size.create(targetWidth, targetHeight), 0, 0, 0)
+        OpenCV.Laplacian(resized, laplacian16, DataTypes.CV_16S, 3, 1, 0, BorderTypes.BORDER_DEFAULT)
+        OpenCV.convertScaleAbs(laplacian16, laplacianAbs)
 
-        const stddev = calculateStandardDeviation(laplacian)
+        const pixels = laplacianAbs.toBuffer('uint8').buffer
+        const variance = calculateVariance(pixels)
 
-        return stddev * stddev
+        return variance
     } finally {
-        laplacian.release()
+        resized.release()
+        laplacian16.release()
+        laplacianAbs.release()
     }
+}
+
+function calculateVariance(pixels: Uint8Array): number {
+    if (pixels.length === 0) {
+        return 0
+    }
+
+    const mean = calculateAveragePixelValue(pixels)
+
+    const squaredDifferenceTotal = pixels.reduce((sum, value) => {
+        const difference = value - mean
+
+        return sum + difference * difference
+    }, 0)
+
+    return squaredDifferenceTotal / pixels.length
 }
 
 function calculateMean(source: Mat): number {
-    const mean = Mat.create()
-    const stddev = Mat.create()
-
-    try {
-        OpenCV.meanStdDev(source, mean, stddev)
-
-        const values = mean.toBuffer('float64')
-
-        return values.buffer[0] ?? 0
-    } finally {
-        mean.release()
-        stddev.release()
-    }
+    return calculateAveragePixelValue(source.toBuffer('uint8').buffer)
 }
 
 function calculateStandardDeviation(source: Mat): number {
-    const mean = Mat.create()
-    const stddev = Mat.create()
-
-    try {
-        OpenCV.meanStdDev(source, mean, stddev)
-
-        const values = stddev.toBuffer('float64')
-
-        return values.buffer[0] ?? 0
-    } finally {
-        mean.release()
-        stddev.release()
-    }
+    return Math.sqrt(calculateVariance(source.toBuffer('uint8').buffer))
 }
 
 function calculatePerceptualHash(grayscale: Mat): string {
-    const resized = Mat.create()
+    const resizeMat = Mat.create(HASH_RESIZE_SIZE, HASH_RESIZE_SIZE, DataTypes.CV_8U)
+    const hashMat = Mat.create(HASH_SIZE, HASH_SIZE, DataTypes.CV_8U)
 
     try {
-        OpenCV.resize(grayscale, resized, Size.create(HASH_RESIZE_SIZE, HASH_RESIZE_SIZE), 0, 0, 0)
+        OpenCV.resize(grayscale, resizeMat, Size.create(HASH_RESIZE_SIZE, HASH_RESIZE_SIZE), 0, 0, 0)
+        OpenCV.resize(resizeMat, hashMat, Size.create(HASH_SIZE, HASH_SIZE), 0, 0, 0)
 
-        const hashImage = Mat.create()
+        const pixels = hashMat.toBuffer('uint8').buffer
+        const average = calculateAveragePixelValue(pixels)
 
-        try {
-            OpenCV.resize(resized, hashImage, Size.create(HASH_SIZE, HASH_SIZE), 0, 0, 0)
-
-            const pixels = hashImage.toBuffer('uint8').buffer
-            const average = calculateAveragePixelValue(pixels)
-
-            return Array.from(pixels)
-                .map(value => (value >= average ? '1' : '0'))
-                .join('')
-        } finally {
-            hashImage.release()
-        }
+        return Array.from(pixels)
+            .map(value => (value >= average ? '1' : '0'))
+            .join('')
     } finally {
-        resized.release()
+        resizeMat.release()
+        hashMat.release()
     }
 }
 
