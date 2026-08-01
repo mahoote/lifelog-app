@@ -104,7 +104,7 @@ export function saveCaptureEvent(
                         importedAt,
                         dayKey,
                         footageItem.isFavorite ?? 0,
-                        footageItem.notes ?? null,
+                        footageItem.description ?? null,
                         footageItem.tagsJson ?? null,
                     ],
                 )
@@ -184,7 +184,8 @@ export function getCaptureEvents(): CaptureEvent[] {
             importedAt: row.imported_at,
             dayKey: row.day_key,
             isFavorite: row.is_favorite === 1,
-            notes: row.notes,
+            title: row.title,
+            description: row.description,
             tagsJson: row.tags_json,
             isProcessed: row.is_processed === 1,
         }

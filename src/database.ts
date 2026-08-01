@@ -29,7 +29,8 @@ export function initDatabase() {
             day_key TEXT NOT NULL,
             is_favorite INTEGER NOT NULL DEFAULT 0,
             is_processed INTEGER NOT NULL DEFAULT 0,
-            notes TEXT,
+            title TEXT,
+            description TEXT,
             tags_json TEXT,
 
             FOREIGN KEY (capture_event_id)
@@ -65,6 +66,8 @@ export function initDatabase() {
 
 function migrateDatabase() {
     addColumnIfMissing('footage_item', 'is_processed', 'INTEGER NOT NULL DEFAULT 0')
+    addColumnIfMissing('footage_item', 'title', 'TEXT')
+    addColumnIfMissing('footage_item', 'description', 'TEXT')
 }
 
 function addColumnIfMissing(tableName: string, columnName: string, columnDefinition: string) {
