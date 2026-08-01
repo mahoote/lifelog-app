@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { colors } from '@/constants/colors'
+import { processUnprocessedFootageItems } from '@/services/footageProcessingService'
 import { getLifelogPendingFootage } from '@/services/lifelogService'
 import { footageActions } from '@/store/footageSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -49,7 +50,7 @@ export default function SyncStatusBar() {
 
             setIsDownloading(false)
 
-            // TODO: Process images
+            await processUnprocessedFootageItems()
 
             // When all the footage have been downloaded
             await invalidateQueries(queryClient)
