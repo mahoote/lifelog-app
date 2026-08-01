@@ -4,7 +4,12 @@ import {
     markFootageItemProcessed,
     markFootageItemSelectedAndProcessed,
 } from '@/repositories/footageItemRepository'
-import { analyzeImageQuality, areNearDuplicates, isImageBlurry } from '@/services/imageQualityService'
+import {
+    analyzeImageQuality,
+    areNearDuplicates,
+    hasLowQuality,
+    isImageBlurry,
+} from '@/services/imageQualityService'
 import { FootageItem } from '@/types/footageItem'
 import {
     AnalyzedFootageItem,
@@ -21,6 +26,7 @@ export async function processUnprocessedFootageItems(): Promise<ImageProcessingS
         rejectedBlurry: 0,
         rejectedNearDuplicate: 0,
         failed: 0,
+        rejectedLowQuality: 0,
     }
 
     const analyzedItems: AnalyzedFootageItem[] = []
@@ -38,6 +44,13 @@ export async function processUnprocessedFootageItems(): Promise<ImageProcessingS
                 await rejectItem(item.id, 'blurry')
                 summary.processed += 1
                 summary.rejectedBlurry += 1
+                continue
+            }
+
+            if (hasLowQuality(metrics)) {
+                await rejectItem(item.id, 'low_quality')
+                summary.processed += 1
+                summary.rejectedLowQuality += 1
                 continue
             }
 
@@ -122,13 +135,18 @@ function belongsToGroup(item: AnalyzedFootageItem, group: AnalyzedFootageItem[])
     return group.some(groupItem => {
         const isCloseInTime = areItemsCloseInTime(item.item, groupItem.item)
         const isSameCaptureEvent =
-            item.item.captureEventId && item.item.captureEventId === groupItem.item.captureEventId
+            item.item.captureEventId !== null &&
+            item.item.captureEventId === groupItem.item.captureEventId
         const isNearDuplicate = areNearDuplicates(
             item.metrics.perceptualHash,
             groupItem.metrics.perceptualHash,
         )
 
-        return (isCloseInTime || isSameCaptureEvent) && isNearDuplicate
+        if (isSameCaptureEvent) {
+            return true
+        }
+
+        return isCloseInTime && isNearDuplicate
     })
 }
 

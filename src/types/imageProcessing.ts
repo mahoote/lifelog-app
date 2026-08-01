@@ -1,7 +1,7 @@
 import { FootageItem } from '@/types/footageItem'
 
 export type ImageProcessingRejectionReason =
-    'blurry' | 'near_duplicate' | 'missing_file' | 'unreadable_file' | 'analysis_failed'
+    'blurry' | 'low_quality' | 'near_duplicate' | 'missing_file' | 'unreadable_file' | 'analysis_failed'
 
 export interface ImageQualityMetrics {
     blurScore: number
@@ -19,6 +19,7 @@ export interface ImageProcessingSummary {
     processed: number
     selected: number
     rejectedBlurry: number
+    rejectedLowQuality: number
     rejectedNearDuplicate: number
     failed: number
 }

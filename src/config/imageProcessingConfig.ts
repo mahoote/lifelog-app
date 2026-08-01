@@ -1,6 +1,6 @@
 export const imageProcessingConfig = {
-    blurVarianceThreshold: 100,
-    lowContrastThreshold: 12,
-    duplicateHashDistanceThreshold: 8,
-    duplicateGroupingWindowMs: 30_000,
+    blurVarianceThreshold: 2600,
+    lowContrastThreshold: 35,
+    duplicateHashDistanceThreshold: 14,
+    duplicateGroupingWindowMs: 180_000,
 }
