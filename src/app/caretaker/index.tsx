@@ -6,11 +6,9 @@ import ImageSection from '@/app/caretaker/imageSection'
 import InfoBar from '@/app/caretaker/infoBar'
 import MediaTabBar from '@/app/caretaker/mediaTabBar'
 import SyncStatusBar from '@/app/caretaker/syncStatusBar'
-import TimeOfDayFilter from '@/app/caretaker/timeOfDayFilter'
 import VideoSection from '@/app/caretaker/videoSection'
 import AppHeader from '@/components/appHeader'
 import DateFilterRow from '@/components/dateFilterRow'
-import { TimeFilter } from '@/types/filter'
 import { MediaTab } from '@/types/media'
 import { VideoGroup } from '@/types/video'
 
@@ -53,7 +51,7 @@ const videoGroups: VideoGroup[] = [
 
 export default function CaretakerScreen() {
     const [activeTab, setActiveTab] = useState<MediaTab>('images')
-    const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
+    // const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
 
     return (
         <SafeAreaView className="flex-1 bg-surface">
@@ -74,7 +72,7 @@ export default function CaretakerScreen() {
 
                 <DateFilterRow />
 
-                <TimeOfDayFilter activeFilter={timeFilter} onFilterChange={setTimeFilter} />
+                {/*<TimeOfDayFilter activeFilter={timeFilter} onFilterChange={setTimeFilter} />*/}
 
                 {activeTab === 'images' ? (
                     <View className="mt-1">
