@@ -104,6 +104,66 @@ export async function getSelectedFootageItemsForAiMetadataRegeneration(
     return rows.map(mapRowToFootageItem)
 }
 
+export async function getVideoFootageItemsMissingAiMetadata(limit?: number): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+            SELECT
+                *
+            FROM footage_item
+            WHERE type = ?
+              AND (
+                title IS NULL
+                    OR TRIM(title) = ''
+                    OR description IS NULL
+                    OR TRIM(description) = ''
+                    OR tags_json IS NULL
+                    OR TRIM(tags_json) = ''
+                )
+            ORDER BY created_at ASC, sequence_index ASC
+                ${typeof limit === 'number' ? 'LIMIT ?' : ''};
+        `,
+        typeof limit === 'number' ? [FootageType.VIDEO, limit] : [FootageType.VIDEO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
+export async function getVideoFootageItemsForAiMetadataRegeneration(
+    limit?: number,
+): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+ SELECT
+ *
+ FROM footage_item
+ WHERE type = ?
+ ORDER BY created_at ASC, sequence_index ASC
+ ${typeof limit === 'number' ? 'LIMIT ?' : ''};
+ `,
+        typeof limit === 'number' ? [FootageType.VIDEO, limit] : [FootageType.VIDEO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
+export async function getPhotoFootageItemsForCaptureEvent(
+    captureEventId: string,
+): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+            SELECT
+                *
+            FROM footage_item
+            WHERE capture_event_id = ?
+              AND type = ?
+            ORDER BY sequence_index ASC, created_at ASC;
+        `,
+        [captureEventId, FootageType.PHOTO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
 export async function updateFootageItemAiMetadata(
     footageItemId: string,
     metadata: AiImageMetadata,
@@ -114,18 +174,9 @@ export async function updateFootageItemAiMetadata(
             SET title = ?,
                 description = ?,
                 tags_json = ?
-            WHERE id = ?
-              AND type = ?
-              AND role = ?;
+            WHERE id = ?;
         `,
-        [
-            metadata.title,
-            metadata.description,
-            JSON.stringify(metadata.tags),
-            footageItemId,
-            FootageType.PHOTO,
-            FootageRole.SELECTED,
-        ],
+        [metadata.title, metadata.description, JSON.stringify(metadata.tags), footageItemId],
     )
 
     return result.changes > 0
@@ -174,14 +225,14 @@ export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem
 export async function markFootageItemSelectedAndProcessed(footageItemId: string): Promise<boolean> {
     const result = await db.runAsync(
         `
-            UPDATE footage_item
-            SET role = ?,
-                is_processed = 1
-            WHERE id = ?
-              AND type = ?
-              AND role IN (?, ?)
-              AND is_processed = 0;
-        `,
+ UPDATE footage_item
+ SET role = ?,
+ is_processed = 1
+ WHERE id = ?
+ AND type = ?
+ AND role IN (?, ?)
+ AND is_processed = 0;
+ `,
         [
             FootageRole.SELECTED,
             footageItemId,
@@ -202,14 +253,14 @@ export async function markFootageItemProcessed(
 
     const result = await db.runAsync(
         `
-            UPDATE footage_item
-            SET is_processed = 1,
-                description = COALESCE(?, description)
-            WHERE id = ?
-              AND type = ?
-              AND role IN (?, ?)
-              AND is_processed = 0;
-        `,
+ UPDATE footage_item
+ SET is_processed = 1,
+ description = COALESCE(?, description)
+ WHERE id = ?
+ AND type = ?
+ AND role IN (?, ?)
+ AND is_processed = 0;
+ `,
         [description, footageItemId, FootageType.PHOTO, FootageRole.CANDIDATE, FootageRole.BURST],
     )
 

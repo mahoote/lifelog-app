@@ -1,9 +1,13 @@
 import { File } from 'expo-file-system'
 import OpenAI from 'openai'
+
 import { config } from '@/config/config'
 import {
+    getPhotoFootageItemsForCaptureEvent,
     getSelectedFootageItemsForAiMetadataRegeneration,
     getSelectedFootageItemsMissingAiMetadata,
+    getVideoFootageItemsForAiMetadataRegeneration,
+    getVideoFootageItemsMissingAiMetadata,
     markSelectedFootageItemAsCandidate,
     updateFootageItemAiMetadata,
 } from '@/repositories/footageItemRepository'
@@ -26,20 +30,20 @@ You may receive a previous accepted image. If the current image is too visually 
 
 Return only valid JSON with this exact shape:
 {
-	"action": "accept",
-	"metadata": {
-		"title": "Short personal memory cue",
-		"description": "A warm, concise memory cue based on what is visible",
-		"tags": ["walking", "outside", "nature"]
-	},
-	"similarityReason": null
+ "action": "accept",
+ "metadata": {
+ "title": "Short personal memory cue",
+ "description": "A warm, concise memory cue based on what is visible",
+ "tags": ["walking", "outside", "nature"]
+ },
+ "similarityReason": null
 }
 
 Or, if the current image is too similar to the previous accepted image:
 {
-	"action": "reject_similar",
-	"metadata": null,
-	"similarityReason": "Short reason why this is too similar"
+ "action": "reject_similar",
+ "metadata": null,
+ "similarityReason": "Short reason why this is too similar"
 }
 
 Style:
@@ -68,6 +72,45 @@ Tags:
 - Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car".
 - Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
 `
+
+const videoMetadataPrompt = `
+You are helping create useful memory cues for a dementia-focused lifelogging app.
+
+You will receive several first-person photos from the same capture event as a video. Use the photos as visual context to create metadata for the video. The generated text may be shown later to help a person revisit moments from their day. Write in a simple, natural, familiar style.
+
+Return only valid JSON with this exact shape:
+{
+ "title": "Short personal memory cue",
+ "description": "A warm, concise memory cue based on the shared visual context",
+ "tags": ["walking", "outside", "nature"]
+}
+
+Style:
+- Make the title short, specific, and natural.
+- The description should be one sentence.
+- Focus on what the video is likely about based on the surrounding photos.
+- Prefer concrete wording such as "In the kitchen", "Walking outside", "At the shops", "Sitting at the table", "Looking at the garden", or "Getting ready to leave".
+- It is acceptable to make gentle everyday assumptions when the photos support them.
+- Avoid saying "the video shows" or "the photos show" unless needed.
+- Do not mention dementia, memory loss, AI, metadata, camera, wearable device, burst photos, or capture events in the output.
+
+Safety:
+- Do not identify private individuals.
+- Do not infer identity, ethnicity, health, disability, emotion, relationships, or other sensitive traits.
+- Do not make medical claims.
+- Do not state uncertain assumptions as fact.
+- Use cautious wording such as "looks like", "appears to be", or "possibly" when unsure.
+- Do not invent specific names, dates, or events.
+- Do not include markdown.
+
+Tags:
+- Tags must be short lowercase strings.
+- Tags should describe useful everyday context.
+- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car".
+- Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
+`
+
+const MAX_VIDEO_CONTEXT_IMAGES = 8
 
 export async function generateAiMetadataForSelectedFootageItems(
     options: AiImageMetadataOptions = {},
@@ -169,6 +212,83 @@ export async function generateAiMetadataForSelectedFootageItems(
     return summary
 }
 
+export async function generateAiMetadataForVideoFootageItems(
+    options: AiImageMetadataOptions = {},
+): Promise<AiImageMetadataBatchSummary> {
+    const summary: AiImageMetadataBatchSummary = {
+        processed: 0,
+        skipped: 0,
+        succeeded: 0,
+        rejectedSimilar: 0,
+        failed: 0,
+    }
+
+    if (!config.OPENAI_API_KEY) {
+        console.warn('OpenAI API key is missing. Skipping AI video metadata generation.')
+        return summary
+    }
+
+    const videos = options.force
+        ? await getVideoFootageItemsForAiMetadataRegeneration(options.limit)
+        : await getVideoFootageItemsMissingAiMetadata(options.limit)
+
+    const client = new OpenAI({
+        apiKey: config.OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true,
+    })
+
+    for (const video of videos) {
+        if (!video.id || !video.captureEventId) {
+            summary.skipped += 1
+            continue
+        }
+
+        if (!options.force && hasAiMetadata(video)) {
+            summary.skipped += 1
+            continue
+        }
+
+        summary.processed += 1
+
+        try {
+            const contextPhotos = await getPhotoFootageItemsForCaptureEvent(video.captureEventId)
+
+            if (contextPhotos.length === 0) {
+                summary.skipped += 1
+                continue
+            }
+
+            const sampledPhotos = sampleContextPhotos(contextPhotos, MAX_VIDEO_CONTEXT_IMAGES)
+            const imageBase64Values = await readImagesAsBase64(sampledPhotos)
+
+            if (imageBase64Values.length === 0) {
+                summary.failed += 1
+                console.warn(`No readable context photos found for video footage item ${video.id}`)
+                continue
+            }
+
+            const metadata = await generateAiMetadataForVideoFromContextImages(client, imageBase64Values)
+
+            const wasSaved = await updateFootageItemAiMetadata(video.id, metadata)
+
+            if (!wasSaved) {
+                summary.failed += 1
+                console.warn(`Failed to save AI metadata for video footage item ${video.id}`)
+                continue
+            }
+
+            summary.succeeded += 1
+        } catch (error) {
+            summary.failed += 1
+            console.warn(`Failed to generate AI metadata for video footage item ${video.id}`, error)
+        }
+    }
+
+    console.info('Generated AI video metadata', summary)
+
+    return summary
+}
+
 async function generateAiMetadataDecisionForFootageItem(
     client: OpenAI,
     currentImageBase64: string,
@@ -244,6 +364,65 @@ The previous response was invalid. Return valid JSON only with action, metadata,
     return retryDecision
 }
 
+async function generateAiMetadataForVideoFromContextImages(
+    client: OpenAI,
+    imageBase64Values: string[],
+): Promise<AiImageMetadata> {
+    const content: OpenAI.Responses.ResponseInputContent[] = [
+        {
+            type: 'input_text',
+            text: videoMetadataPrompt,
+        },
+        ...imageBase64Values.map(imageBase64 => ({
+            type: 'input_image' as const,
+            image_url: `data:image/jpeg;base64,${imageBase64}`,
+            detail: 'low' as const,
+        })),
+    ]
+
+    const response = await client.responses.create({
+        model: config.OPENAI_VISION_MODEL,
+        input: [
+            {
+                role: 'user',
+                content,
+            },
+        ],
+    })
+
+    const metadata = validateAiImageMetadata(parseJsonObject(response.output_text))
+
+    if (metadata) {
+        return metadata
+    }
+
+    const retryResponse = await client.responses.create({
+        model: config.OPENAI_VISION_MODEL,
+        input: [
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: 'input_text',
+                        text: `${videoMetadataPrompt}
+
+The previous response was invalid. Return valid JSON only with title, description, and tags.`,
+                    },
+                    ...content.filter(item => item.type === 'input_image'),
+                ],
+            },
+        ],
+    })
+
+    const retryMetadata = validateAiImageMetadata(parseJsonObject(retryResponse.output_text))
+
+    if (!retryMetadata) {
+        throw new Error('AI video metadata failed validation')
+    }
+
+    return retryMetadata
+}
+
 async function readImageAsBase64(fileUri: string): Promise<string> {
     const file = new File(fileUri)
 
@@ -256,6 +435,37 @@ async function readImageAsBase64(fileUri: string): Promise<string> {
     }
 
     return file.base64()
+}
+
+async function readImagesAsBase64(items: FootageItem[]): Promise<string[]> {
+    const base64Values: string[] = []
+
+    for (const item of items) {
+        try {
+            const imageBase64 = await readImageAsBase64(item.fileUri)
+            base64Values.push(imageBase64)
+        } catch (error) {
+            console.warn(`Skipping unreadable context photo ${item.id}`, error)
+        }
+    }
+
+    return base64Values
+}
+
+function sampleContextPhotos(items: FootageItem[], maxCount: number): FootageItem[] {
+    if (items.length <= maxCount) {
+        return items
+    }
+
+    const result: FootageItem[] = []
+    const lastIndex = items.length - 1
+
+    for (let index = 0; index < maxCount; index += 1) {
+        const sourceIndex = Math.round((index / (maxCount - 1)) * lastIndex)
+        result.push(items[sourceIndex])
+    }
+
+    return result
 }
 
 function hasAiMetadata(item: FootageItem): boolean {

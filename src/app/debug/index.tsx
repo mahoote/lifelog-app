@@ -4,7 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import AppHeader from '@/components/appHeader'
 import { resetProcessedSelectedFootageItems } from '@/repositories/footageItemRepository'
-import { generateAiMetadataForSelectedFootageItems } from '@/services/aiImageMetadataService'
+import {
+    generateAiMetadataForSelectedFootageItems,
+    generateAiMetadataForVideoFootageItems,
+} from '@/services/aiImageMetadataService'
 import { processUnprocessedFootageItems } from '@/services/footageProcessingService'
 import { getLifelogPendingFootage } from '@/services/lifelogService'
 import { footageActions } from '@/store/footageSlice'
@@ -20,6 +23,7 @@ export default function DebugScreen() {
 
     const [isExporting, setIsExporting] = useState(false)
     const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false)
+    const [isGeneratingVideoMetadata, setIsGeneratingVideoMetadata] = useState(false)
     const [isProcessingFootage, setIsProcessingFootage] = useState(false)
     const [isDownloadingFootage, setIsDownloadingFootage] = useState(false)
     const [isResettingFootage, setIsResettingFootage] = useState(false)
@@ -70,6 +74,35 @@ export default function DebugScreen() {
             Alert.alert('AI metadata failed', message)
         } finally {
             setIsGeneratingMetadata(false)
+        }
+    }
+
+    async function handleGenerateVideoAiMetadata() {
+        if (isGeneratingVideoMetadata) {
+            return
+        }
+
+        setIsGeneratingVideoMetadata(true)
+
+        try {
+            const summary = await generateAiMetadataForVideoFootageItems()
+
+            Alert.alert(
+                'Video AI metadata complete',
+                [
+                    `Processed: ${summary.processed}`,
+                    `Skipped: ${summary.skipped}`,
+                    `Succeeded: ${summary.succeeded}`,
+                    `Failed: ${summary.failed}`,
+                ].join('\n'),
+            )
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'Could not generate video AI metadata.'
+
+            Alert.alert('Video AI metadata failed', message)
+        } finally {
+            setIsGeneratingVideoMetadata(false)
         }
     }
 
@@ -223,7 +256,7 @@ export default function DebugScreen() {
                     className="rounded-xl bg-primary px-4 py-3 active:opacity-80 disabled:opacity-50"
                 >
                     <Text className="text-center font-atkinson-bold text-[16px] text-on-primary">
-                        {isProcessingFootage ? 'Processing footage...' : 'Process footage'}
+                        {isProcessingFootage ? 'Quality checking footage...' : 'Quality check footage'}
                     </Text>
                 </Pressable>
 
@@ -234,6 +267,18 @@ export default function DebugScreen() {
                 >
                     <Text className="text-center font-atkinson-bold text-[16px] text-on-primary">
                         {isGeneratingMetadata ? 'Generating metadata...' : 'Generate AI metadata'}
+                    </Text>
+                </Pressable>
+
+                <Pressable
+                    disabled={isGeneratingVideoMetadata}
+                    onPress={() => void handleGenerateVideoAiMetadata()}
+                    className="rounded-xl bg-primary px-4 py-3 active:opacity-80 disabled:opacity-50"
+                >
+                    <Text className="text-center font-atkinson-bold text-[16px] text-on-primary">
+                        {isGeneratingVideoMetadata
+                            ? 'Generating video metadata...'
+                            : 'Generate video AI metadata'}
                     </Text>
                 </Pressable>
 
