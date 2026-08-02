@@ -21,22 +21,22 @@ export default function OptionsCard() {
             <View className="flex gap-2">
                 <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Delete all data"
-                    className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
-                    onPress={() => void deleteAllSavedFootage(queryClient)}
-                >
-                    <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
-                    <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
-                </Pressable>
-
-                <Pressable
-                    accessibilityRole="button"
                     accessibilityLabel="Debug"
                     className="h-14 flex-row items-center justify-center rounded-full border-2 border-primary bg-surface gap-3 active:bg-error-container"
                     onPress={() => router.push('/debug')}
                 >
                     <FontAwesomeIcon icon={faBug} size={16} color={colors.primary} />
                     <Text className="font-atkinson-bold text-[17px] text-primary">Debug</Text>
+                </Pressable>
+
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete all data"
+                    className="h-14 flex-row items-center justify-center rounded-full border-2 border-error bg-surface gap-3 active:bg-error-container"
+                    onPress={() => void deleteAllSavedFootage(queryClient)}
+                >
+                    <FontAwesomeIcon icon={faTrash} size={16} color={colors.error} />
+                    <Text className="font-atkinson-bold text-[17px] text-error">Delete All Data</Text>
                 </Pressable>
             </View>
         </View>

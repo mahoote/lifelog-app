@@ -14,6 +14,7 @@ import { FootageItem, FootageType } from '@/types/footageItem'
 export default function FootageScreen() {
     const [current, setCurrent] = useState<FootageItem | null>(null)
     const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
 
     const { id, type } = useLocalSearchParams<{ id: string; type?: FootageType }>()
     const routeId = Array.isArray(id) ? (id[0] as string) : id
@@ -30,11 +31,13 @@ export default function FootageScreen() {
         async function fetchFootageItem() {
             if (!selectedId) {
                 setCurrent(null)
+                setIsPlaying(false)
                 return
             }
 
             const item = await getFootageItemById(selectedId)
             setCurrent(item)
+            setIsPlaying(false)
         }
 
         void fetchFootageItem()
@@ -52,6 +55,11 @@ export default function FootageScreen() {
         return items.findIndex(item => item.id === selectedId)
     }, [items, selectedId])
 
+    const descriptionFallback =
+        footageType === FootageType.VIDEO
+            ? 'This video is used only as context for the memory and does not have a description.'
+            : 'This image is used only as context for the memory and does not have a description.'
+
     return (
         <SafeAreaView className="flex-1 bg-surface">
             <FootageHeader
@@ -61,7 +69,12 @@ export default function FootageScreen() {
             />
 
             <View className="flex-1">
-                <MainImage uri={current?.fileUri} />
+                <MainImage
+                    uri={current?.fileUri}
+                    type={footageType}
+                    isPlaying={isPlaying}
+                    onPlayPause={() => setIsPlaying(value => !value)}
+                />
 
                 <ThumbnailStrip
                     dayKey={dayKey}
@@ -73,11 +86,7 @@ export default function FootageScreen() {
                 <View className="mt-4 px-6">
                     <MomentDescription
                         title={footageType === FootageType.VIDEO ? 'Video' : 'Image'}
-                        description={
-                            (current?.description ?? footageType === FootageType.VIDEO)
-                                ? 'This video is used only as context for the memory and does not have a description.'
-                                : 'This image is used only as context for the memory and does not have a description.'
-                        }
+                        description={current?.description ?? descriptionFallback}
                     />
                 </View>
             </View>
