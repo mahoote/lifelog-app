@@ -14,7 +14,7 @@ export default function VideoCard({ item }: Props) {
     const router = useRouter()
 
     const title = item.title?.trim() ?? 'Video'
-    const description = item.description?.trim() ?? 'Video footage'
+    const description = item.description?.trim() ?? 'No description'
 
     return (
         <Pressable
