@@ -4,33 +4,51 @@ import { config } from '@/config/config'
 import {
     getSelectedFootageItemsForAiMetadataRegeneration,
     getSelectedFootageItemsMissingAiMetadata,
+    markSelectedFootageItemAsCandidate,
     updateFootageItemAiMetadata,
 } from '@/repositories/footageItemRepository'
 import {
     AiImageMetadata,
     AiImageMetadataBatchSummary,
+    AiImageMetadataDecision,
     AiImageMetadataOptions,
 } from '@/types/aiImageMetadata'
 import { FootageItem } from '@/types/footageItem'
 
 const metadataPrompt = `
-You are helping create gentle memory cues for a dementia-focused lifelogging app.
+You are helping create useful memory cues for a dementia-focused lifelogging app.
 
-The image comes from a first-person wearable camera. The generated text may be shown later to help a person revisit a moment from their day. Write in a warm, simple, familiar style. The output should feel like a memory cue, not a surveillance label or technical image caption.
+The image comes from a first-person wearable camera. The generated text may be shown later to help a person revisit moments from their day. Write in a simple, natural, familiar style.
+
+Avoid repeating the same generic phrases. Do not overuse words like "quiet", "peaceful", "calm", or "moment". Use them only when they are strongly supported by the image. Prefer concrete activity and place descriptions.
+
+You may receive a previous accepted image. If the current image is too visually similar to the previous accepted image, reject it instead of creating metadata. Reject only when it appears to show the same place, activity, and scene with little new information.
 
 Return only valid JSON with this exact shape:
 {
-	"title": "Short personal memory cue",
-	"description": "A warm, concise memory cue based on what is visible",
-	"tags": ["walking", "outside", "nature"]
+	"action": "accept",
+	"metadata": {
+		"title": "Short personal memory cue",
+		"description": "A warm, concise memory cue based on what is visible",
+		"tags": ["walking", "outside", "nature"]
+	},
+	"similarityReason": null
+}
+
+Or, if the current image is too similar to the previous accepted image:
+{
+	"action": "reject_similar",
+	"metadata": null,
+	"similarityReason": "Short reason why this is too similar"
 }
 
 Style:
-- Make the title short, natural, and personal.
+- Make the title short, specific, and natural.
 - The description should be one sentence.
-- Prefer phrases like "A moment in...", "Time spent...", "A quiet moment...", or "This looks like...".
+- Focus on what makes this image useful as a memory cue.
+- Prefer concrete wording such as "In the kitchen", "Walking outside", "At the shops", "Sitting at the table", "Looking at the garden", or "Getting ready to leave".
 - It is acceptable to make gentle everyday assumptions, for example "having a meal", "going for a walk", "spending time at home", or "being outside", when the image supports it.
-- Keep the wording calm, supportive, and easy to understand.
+- Vary the wording between images.
 - Avoid clinical, technical, or overly objective wording.
 - Avoid saying "the image shows" unless needed.
 - Do not mention dementia, memory loss, AI, metadata, camera, or wearable device in the output.
@@ -41,13 +59,13 @@ Safety:
 - Do not make medical claims.
 - Do not state uncertain assumptions as fact.
 - Use cautious wording such as "looks like", "appears to be", or "possibly" when unsure.
-- Do not invent specific names, places, dates, or events.
+- Do not invent specific names, dates, or events.
 - Do not include markdown.
 
 Tags:
 - Tags must be short lowercase strings.
 - Tags should describe useful everyday context.
-- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "family", "travel", "resting", "pets", "nature", "street", "indoors".
+- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car".
 - Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
 `
 
@@ -58,6 +76,7 @@ export async function generateAiMetadataForSelectedFootageItems(
         processed: 0,
         skipped: 0,
         succeeded: 0,
+        rejectedSimilar: 0,
         failed: 0,
     }
 
@@ -75,6 +94,9 @@ export async function generateAiMetadataForSelectedFootageItems(
         dangerouslyAllowBrowser: true,
     })
 
+    let previousAcceptedImageBase64: string | null = null
+    let previousAcceptedItemId: string | null = null
+
     for (const item of items) {
         if (!item.id) {
             summary.skipped += 1
@@ -89,8 +111,40 @@ export async function generateAiMetadataForSelectedFootageItems(
         summary.processed += 1
 
         try {
-            const metadata = await generateAiMetadataForFootageItem(client, item)
-            const wasSaved = await updateFootageItemAiMetadata(item.id, metadata)
+            const currentImageBase64 = await readImageAsBase64(item.fileUri)
+            const decision = await generateAiMetadataDecisionForFootageItem(
+                client,
+                currentImageBase64,
+                previousAcceptedImageBase64,
+            )
+
+            if (decision.action === 'reject_similar') {
+                const wasDemoted = await markSelectedFootageItemAsCandidate(
+                    item.id,
+                    `Rejected by AI metadata processing: similar_to_previous${
+                        decision.similarityReason ? ` - ${decision.similarityReason}` : ''
+                    }`,
+                )
+
+                if (!wasDemoted) {
+                    summary.failed += 1
+                    console.warn(`Failed to demote similar footage item ${item.id}`)
+                    continue
+                }
+
+                summary.rejectedSimilar += 1
+                continue
+            }
+
+            if (!decision.metadata) {
+                summary.failed += 1
+                console.warn(
+                    `AI metadata decision accepted without metadata for footage item ${item.id}`,
+                )
+                continue
+            }
+
+            const wasSaved = await updateFootageItemAiMetadata(item.id, decision.metadata)
 
             if (!wasSaved) {
                 summary.failed += 1
@@ -98,10 +152,15 @@ export async function generateAiMetadataForSelectedFootageItems(
                 continue
             }
 
+            previousAcceptedImageBase64 = currentImageBase64
+            previousAcceptedItemId = item.id
             summary.succeeded += 1
         } catch (error) {
             summary.failed += 1
-            console.warn(`Failed to generate AI metadata for footage item ${item.id}:`, error)
+            console.warn(
+                `Failed to generate AI metadata for footage item ${item.id}. Previous accepted item: ${previousAcceptedItemId}`,
+                error,
+            )
         }
     }
 
@@ -110,38 +169,52 @@ export async function generateAiMetadataForSelectedFootageItems(
     return summary
 }
 
-async function generateAiMetadataForFootageItem(
+async function generateAiMetadataDecisionForFootageItem(
     client: OpenAI,
-    item: FootageItem,
-): Promise<AiImageMetadata> {
-    const imageBase64 = await readImageAsBase64(item.fileUri)
+    currentImageBase64: string,
+    previousAcceptedImageBase64: string | null,
+): Promise<AiImageMetadataDecision> {
+    const content: OpenAI.Responses.ResponseInputContent[] = [
+        {
+            type: 'input_text',
+            text: previousAcceptedImageBase64
+                ? `${metadataPrompt}
+
+Compare the current image with the previous accepted image. Reject the current image only if it is too similar and adds little new information.`
+                : `${metadataPrompt}
+
+There is no previous accepted image. You must evaluate the current image on its own.`,
+        },
+    ]
+
+    if (previousAcceptedImageBase64) {
+        content.push({
+            type: 'input_image',
+            image_url: `data:image/jpeg;base64,${previousAcceptedImageBase64}`,
+            detail: 'low',
+        })
+    }
+
+    content.push({
+        type: 'input_image',
+        image_url: `data:image/jpeg;base64,${currentImageBase64}`,
+        detail: 'low',
+    })
 
     const response = await client.responses.create({
         model: config.OPENAI_VISION_MODEL,
         input: [
             {
                 role: 'user',
-                content: [
-                    {
-                        type: 'input_text',
-                        text: metadataPrompt,
-                    },
-                    {
-                        type: 'input_image',
-                        image_url: `data:image/jpeg;base64,${imageBase64}`,
-                        detail: 'low',
-                    },
-                ],
+                content,
             },
         ],
     })
 
-    const rawText = response.output_text
-    const parsed = parseJsonObject(rawText)
-    const metadata = validateAiImageMetadata(parsed)
+    const decision = validateAiImageMetadataDecision(parseJsonObject(response.output_text))
 
-    if (metadata) {
-        return metadata
+    if (decision) {
+        return decision
     }
 
     const retryResponse = await client.responses.create({
@@ -154,26 +227,21 @@ async function generateAiMetadataForFootageItem(
                         type: 'input_text',
                         text: `${metadataPrompt}
 
-The previous response was invalid. Return valid JSON only.`,
+The previous response was invalid. Return valid JSON only with action, metadata, and similarityReason.`,
                     },
-                    {
-                        type: 'input_image',
-                        image_url: `data:image/jpeg;base64,${imageBase64}`,
-                        detail: 'low',
-                    },
+                    ...content.filter(item => item.type === 'input_image'),
                 ],
             },
         ],
     })
 
-    const retryParsed = parseJsonObject(retryResponse.output_text)
-    const retryMetadata = validateAiImageMetadata(retryParsed)
+    const retryDecision = validateAiImageMetadataDecision(parseJsonObject(retryResponse.output_text))
 
-    if (!retryMetadata) {
-        throw new Error('AI metadata response failed validation')
+    if (!retryDecision) {
+        throw new Error('AI metadata decision failed validation')
     }
 
-    return retryMetadata
+    return retryDecision
 }
 
 async function readImageAsBase64(fileUri: string): Promise<string> {
@@ -208,6 +276,39 @@ function parseJsonObject(rawText: string): unknown {
         }
 
         return JSON.parse(trimmedText.slice(startIndex, endIndex + 1))
+    }
+}
+
+function validateAiImageMetadataDecision(value: unknown): AiImageMetadataDecision | null {
+    if (!value || typeof value !== 'object') {
+        return null
+    }
+
+    const record = value as Record<string, unknown>
+    const action = record.action
+
+    if (action === 'reject_similar') {
+        return {
+            action: 'reject_similar',
+            metadata: null,
+            similarityReason: normalizeText(record.similarityReason),
+        }
+    }
+
+    if (action !== 'accept') {
+        return null
+    }
+
+    const metadata = validateAiImageMetadata(record.metadata)
+
+    if (!metadata) {
+        return null
+    }
+
+    return {
+        action: 'accept',
+        metadata,
+        similarityReason: null,
     }
 }
 
