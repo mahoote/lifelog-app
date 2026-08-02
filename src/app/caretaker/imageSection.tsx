@@ -69,7 +69,7 @@ export default function ImageSection() {
             )}
 
             <View className="items-end w-full">
-                <Text>{images.length} images</Text>
+                <Text className="font-atkinson">{images.length} images</Text>
             </View>
 
             <View className="gap-6">
