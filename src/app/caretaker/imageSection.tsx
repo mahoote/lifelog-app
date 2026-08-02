@@ -61,38 +61,43 @@ export default function ImageSection() {
     const groups = groupByTimeOfDay(images)
 
     return (
-        <View className="gap-6">
+        <View>
             {isFetching && (
                 <Text className="font-atkinson-medium text-[12px] text-on-surface-variant">
                     Updating...
                 </Text>
             )}
 
-            {groups.map(({ label, items }) => {
-                const rows: FootageItem[][] = []
-                for (let i = 0; i < items.length; i += 3) {
-                    rows.push(items.slice(i, i + 3))
-                }
+            <View className="items-end w-full">
+                <Text className="font-atkinson">{images.length} images</Text>
+            </View>
 
-                return (
-                    <View key={label}>
-                        <Text>DEBUG: {images.length} images</Text>
-                        <Text className="mb-3 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
-                            {label}
-                        </Text>
+            <View className="gap-6">
+                {groups.map(({ label, items }) => {
+                    const rows: FootageItem[][] = []
+                    for (let i = 0; i < items.length; i += 3) {
+                        rows.push(items.slice(i, i + 3))
+                    }
 
-                        <View className="gap-2">
-                            {rows.map((row, rowIndex) => (
-                                <View key={rowIndex} className="flex-row gap-2">
-                                    {row.map(item => (
-                                        <ImageTile key={item.id} item={item} size={tileSize} />
-                                    ))}
-                                </View>
-                            ))}
+                    return (
+                        <View key={label}>
+                            <Text className="mb-3 font-atkinson-bold text-[22px] leading-[28px] text-on-surface">
+                                {label}
+                            </Text>
+
+                            <View className="gap-2">
+                                {rows.map((row, rowIndex) => (
+                                    <View key={rowIndex} className="flex-row gap-2">
+                                        {row.map(item => (
+                                            <ImageTile key={item.id} item={item} size={tileSize} />
+                                        ))}
+                                    </View>
+                                ))}
+                            </View>
                         </View>
-                    </View>
-                )
-            })}
+                    )
+                })}
+            </View>
         </View>
     )
 }

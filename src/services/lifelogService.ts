@@ -1,5 +1,5 @@
 import { Directory, File, Paths } from 'expo-file-system'
-import { config } from '@/config'
+import { config } from '@/config/config'
 import { mapCaptureEvent } from '@/mappers/captureEventMapper'
 import { CaptureEvent, CaptureEventResponse } from '@/types/captureEvent'
 import { FootageType } from '@/types/footageItem'

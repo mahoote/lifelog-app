@@ -51,6 +51,14 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
         setSyncLoading(false)
     }
 
+    const handleBackPress = () => {
+        if (onBackPress) {
+            onBackPress()
+        } else {
+            router.back()
+        }
+    }
+
     const handleButtonPress = () => {
         switch (variant) {
             case 'settings':
@@ -86,7 +94,7 @@ export default function AppHeader({ title, variant = 'default', onBackPress }: P
                     <Pressable
                         accessibilityRole="button"
                         accessibilityLabel="Go back"
-                        onPress={onBackPress}
+                        onPress={handleBackPress}
                         className="h-11 flex-row items-center justify-center gap-2 active:opacity-70"
                     >
                         <FontAwesomeIcon icon={faArrowLeft} size={18} color={colors.primary} />

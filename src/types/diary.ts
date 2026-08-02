@@ -4,4 +4,5 @@ export interface DiaryEntry {
     caption: string
     uri: string
     datetime: string
+    tags: string[]
 }
