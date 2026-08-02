@@ -52,9 +52,10 @@ export function mapRowToFootageItem(row: FootageItemRow): FootageItem {
 export function mapFootageItemToDiaryEntry(item: FootageItem): DiaryEntry {
     return {
         id: item.id ?? `${item.createdAt}-${item.sequenceIndex}`,
-        title: formatDate(new Date(item.createdAt)),
+        title: item.title ?? formatDate(new Date(item.createdAt)),
         caption: item.description ?? 'Selected memory from this day.',
         uri: item.fileUri,
         datetime: formatDiaryDatetime(item.createdAt),
+        tags: item.tagsJson ? (JSON.parse(item.tagsJson) as string[]) : [],
     }
 }

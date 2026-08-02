@@ -1,12 +1,5 @@
 import { Image, Text, View } from 'react-native'
-
-interface DiaryEntry {
-    id: string
-    title: string
-    caption: string
-    uri: string
-    datetime: string
-}
+import { DiaryEntry } from '@/types/diary'
 
 interface Props {
     entry: DiaryEntry
@@ -15,8 +8,11 @@ interface Props {
 export default function SlideshowImage({ entry }: Props) {
     return (
         <View>
-            <Text className="mb-4 font-atkinson-bold text-[13px] uppercase tracking-[1.4px] text-secondary">
+            <Text className="font-atkinson-bold text-[13px] uppercase tracking-[1.4px] text-secondary">
                 {entry.datetime}
+            </Text>
+            <Text className="mb-4 font-atkinson-medium text-[14px] leading-[25px] text-on-surface-variant">
+                {entry.tags.join(', ')}
             </Text>
 
             <View className="overflow-hidden rounded-xl">
