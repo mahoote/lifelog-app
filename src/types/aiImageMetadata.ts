@@ -4,10 +4,17 @@ export interface AiImageMetadata {
     tags: string[]
 }
 
+export interface AiImageMetadataDecision {
+    action: 'accept' | 'reject_similar'
+    metadata: AiImageMetadata | null
+    similarityReason: string | null
+}
+
 export interface AiImageMetadataBatchSummary {
     processed: number
     skipped: number
     succeeded: number
+    rejectedSimilar: number
     failed: number
 }
 
@@ -23,3 +30,4 @@ export type AiImageMetadataFailureReason =
     | 'invalid_response'
     | 'validation_failed'
     | 'save_failed'
+    | 'similar_to_previous'
