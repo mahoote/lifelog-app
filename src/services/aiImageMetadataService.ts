@@ -14,22 +14,41 @@ import {
 import { FootageItem } from '@/types/footageItem'
 
 const metadataPrompt = `
+You are helping create gentle memory cues for a dementia-focused lifelogging app.
+
+The image comes from a first-person wearable camera. The generated text may be shown later to help a person revisit a moment from their day. Write in a warm, simple, familiar style. The output should feel like a memory cue, not a surveillance label or technical image caption.
+
 Return only valid JSON with this exact shape:
 {
-	"title": "Short human-readable title",
-	"description": "A concise description of what is visible in the image",
+	"title": "Short personal memory cue",
+	"description": "A warm, concise memory cue based on what is visible",
 	"tags": ["walking", "outside", "nature"]
 }
 
-Rules:
-- The title must be short.
-- The description must only describe visible content.
-- The tags must be short lowercase strings.
+Style:
+- Make the title short, natural, and personal.
+- The description should be one sentence.
+- Prefer phrases like "A moment in...", "Time spent...", "A quiet moment...", or "This looks like...".
+- It is acceptable to make gentle everyday assumptions, for example "having a meal", "going for a walk", "spending time at home", or "being outside", when the image supports it.
+- Keep the wording calm, supportive, and easy to understand.
+- Avoid clinical, technical, or overly objective wording.
+- Avoid saying "the image shows" unless needed.
+- Do not mention dementia, memory loss, AI, metadata, camera, or wearable device in the output.
+
+Safety:
 - Do not identify private individuals.
-- Do not infer identity, ethnicity, health, disability, emotion, or other sensitive traits.
+- Do not infer identity, ethnicity, health, disability, emotion, relationships, or other sensitive traits.
 - Do not make medical claims.
-- Use cautious wording such as "appears to show" when uncertain.
+- Do not state uncertain assumptions as fact.
+- Use cautious wording such as "looks like", "appears to be", or "possibly" when unsure.
+- Do not invent specific names, places, dates, or events.
 - Do not include markdown.
+
+Tags:
+- Tags must be short lowercase strings.
+- Tags should describe useful everyday context.
+- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "family", "travel", "resting", "pets", "nature", "street", "indoors".
+- Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
 `
 
 export async function generateAiMetadataForSelectedFootageItems(

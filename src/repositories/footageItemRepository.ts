@@ -131,6 +131,29 @@ export async function updateFootageItemAiMetadata(
     return result.changes > 0
 }
 
+export async function markSelectedFootageItemAsCandidate(
+    footageItemId: string,
+    rejectionReason?: string,
+): Promise<boolean> {
+    const description = rejectionReason?.trim() ?? null
+
+    const result = await db.runAsync(
+        `
+			UPDATE footage_item
+			SET role = ?,
+				title = NULL,
+				description = COALESCE(?, description),
+				tags_json = NULL
+			WHERE id = ?
+				AND type = ?
+				AND role = ?;
+		`,
+        [FootageRole.CANDIDATE, description, footageItemId, FootageType.PHOTO, FootageRole.SELECTED],
+    )
+
+    return result.changes > 0
+}
+
 export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem[]> {
     const rows = await db.getAllAsync<FootageItemRow>(
         `
