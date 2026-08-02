@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { ScrollView, Text, TouchableOpacity } from 'react-native'
 
 interface DateOption {
@@ -15,23 +14,13 @@ interface Props {
 }
 
 export default function DatePicker({ options, selectedId, onSelect }: Props) {
-    const scrollRef = useRef<ScrollView>(null)
-
-    useEffect(() => {
-        scrollRef.current?.scrollToEnd({ animated: false })
-    }, [])
-
-    // Reverse so oldest is on the left, newest is on the right
-    const sorted = [...options].reverse()
-
     return (
         <ScrollView
-            ref={scrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerClassName="flex-row gap-3"
         >
-            {sorted.map(option => {
+            {options.map(option => {
                 const isActive = option.id === selectedId
                 return (
                     <TouchableOpacity
