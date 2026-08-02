@@ -3,51 +3,12 @@ import { ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ImageSection from '@/app/caretaker/imageSection'
-import InfoBar from '@/app/caretaker/infoBar'
 import MediaTabBar from '@/app/caretaker/mediaTabBar'
 import SyncStatusBar from '@/app/caretaker/syncStatusBar'
 import VideoSection from '@/app/caretaker/videoSection'
 import AppHeader from '@/components/appHeader'
 import DateFilterRow from '@/components/dateFilterRow'
 import { MediaTab } from '@/types/media'
-import { VideoGroup } from '@/types/video'
-
-const videoGroups: VideoGroup[] = [
-    {
-        label: 'Morning',
-        items: [
-            {
-                id: 'v1',
-                title: 'Morning Reading',
-                time: '10:15 AM',
-                location: 'South Lounge',
-                activity: 'Resting',
-                uri: 'https://picsum.photos/seed/v1/200/200',
-            },
-        ],
-    },
-    {
-        label: 'Afternoon',
-        items: [
-            {
-                id: 'v2',
-                title: 'Lunch Preparation',
-                time: '12:30 PM',
-                location: 'Kitchen',
-                activity: 'Social',
-                uri: 'https://picsum.photos/seed/v2/200/200',
-            },
-            {
-                id: 'v3',
-                title: 'Garden Walk',
-                time: '3:45 PM',
-                location: 'East Garden',
-                activity: 'Mobility',
-                uri: 'https://picsum.photos/seed/v3/200/200',
-            },
-        ],
-    },
-]
 
 export default function CaretakerScreen() {
     const [activeTab, setActiveTab] = useState<MediaTab>('images')
@@ -79,17 +40,9 @@ export default function CaretakerScreen() {
                         <ImageSection />
                     </View>
                 ) : (
-                    <>
-                        <View className="mt-2">
-                            <InfoBar />
-                        </View>
-
-                        <View className="mt-2 gap-7">
-                            {videoGroups.map(group => (
-                                <VideoSection key={group.label} group={group} />
-                            ))}
-                        </View>
-                    </>
+                    <View className="mt-1">
+                        <VideoSection />
+                    </View>
                 )}
             </ScrollView>
         </SafeAreaView>

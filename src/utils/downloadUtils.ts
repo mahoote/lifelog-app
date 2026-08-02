@@ -1,10 +1,19 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
 import { File } from 'expo-file-system'
+
 import { saveCaptureEvent } from '@/repositories/captureEventRepository'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
-import { downloadFootageById } from '@/services/lifelogService'
+import { ackFootageById, downloadFootageById, failFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
+
+interface FootageDownloadResult {
+    id: string | null
+    uri: string | null
+    continue: boolean
+    acked: boolean
+    failedReported: boolean
+}
 
 /**
  * Downloads all the capture events and their footage items.
@@ -20,7 +29,7 @@ export async function downloadCaptureEventsFootage(
 ): Promise<
     {
         captureEventId: string | null
-        downloads: { id: string | null; uri: string | null; continue: boolean }[]
+        downloads: FootageDownloadResult[]
     }[]
 > {
     const results = []
@@ -60,12 +69,12 @@ export async function downloadCaptureEventsFootage(
  */
 export async function downloadCaptureEventFootage(
     captureEvent: CaptureEvent,
-): Promise<{ id: string | null; uri: string | null; continue: boolean }[]> {
+): Promise<FootageDownloadResult[]> {
     if (!captureEvent.footageItems) {
         return []
     }
 
-    const results = []
+    const results: FootageDownloadResult[] = []
 
     for (const footageItem of captureEvent.footageItems) {
         if (!footageItem.id) {
@@ -78,10 +87,14 @@ export async function downloadCaptureEventFootage(
             const existingFile = new File(existingFootageItem.fileUri)
 
             if (existingFile.exists && existingFile.size > 0) {
+                const acked = await ackFootageById(footageItem.id)
+
                 results.push({
                     id: footageItem.id,
                     uri: existingFootageItem.fileUri,
                     continue: true,
+                    acked,
+                    failedReported: false,
                 })
                 continue
             }
@@ -105,9 +118,14 @@ export async function downloadCaptureEventFootage(
             footageItem.fileUri,
         )
 
+        const acked = result.uri ? await ackFootageById(footageItem.id) : false
+        const failedReported = result.uri ? false : await failFootageById(footageItem.id)
+
         results.push({
             id: footageItem.id,
             ...result,
+            acked,
+            failedReported,
         })
 
         if (!result.continue) {

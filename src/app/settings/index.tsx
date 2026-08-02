@@ -48,7 +48,7 @@ export default function SettingsScreen() {
         <SafeAreaView className="flex-1 bg-surface">
             <ScrollView
                 className="flex-1"
-                contentContainerClassName="px-8 pb-10 pt-2"
+                contentContainerClassName="px-8 pt-2"
                 showsVerticalScrollIndicator={false}
             >
                 <View className="gap-8">

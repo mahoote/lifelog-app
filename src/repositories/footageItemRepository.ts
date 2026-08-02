@@ -104,28 +104,79 @@ export async function getSelectedFootageItemsForAiMetadataRegeneration(
     return rows.map(mapRowToFootageItem)
 }
 
+export async function getVideoFootageItemsMissingAiMetadata(limit?: number): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+            SELECT
+                *
+            FROM footage_item
+            WHERE type = ?
+              AND (
+                title IS NULL
+                    OR TRIM(title) = ''
+                    OR description IS NULL
+                    OR TRIM(description) = ''
+                    OR tags_json IS NULL
+                    OR TRIM(tags_json) = ''
+                )
+            ORDER BY created_at ASC, sequence_index ASC
+                ${typeof limit === 'number' ? 'LIMIT ?' : ''};
+        `,
+        typeof limit === 'number' ? [FootageType.VIDEO, limit] : [FootageType.VIDEO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
+export async function getVideoFootageItemsForAiMetadataRegeneration(
+    limit?: number,
+): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+ SELECT
+ *
+ FROM footage_item
+ WHERE type = ?
+ ORDER BY created_at ASC, sequence_index ASC
+ ${typeof limit === 'number' ? 'LIMIT ?' : ''};
+ `,
+        typeof limit === 'number' ? [FootageType.VIDEO, limit] : [FootageType.VIDEO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
+export async function getPhotoFootageItemsForCaptureEvent(
+    captureEventId: string,
+): Promise<FootageItem[]> {
+    const rows = await db.getAllAsync<FootageItemRow>(
+        `
+            SELECT
+                *
+            FROM footage_item
+            WHERE capture_event_id = ?
+              AND type = ?
+            ORDER BY sequence_index ASC, created_at ASC;
+        `,
+        [captureEventId, FootageType.PHOTO],
+    )
+
+    return rows.map(mapRowToFootageItem)
+}
+
 export async function updateFootageItemAiMetadata(
     footageItemId: string,
     metadata: AiImageMetadata,
 ): Promise<boolean> {
     const result = await db.runAsync(
         `
-			UPDATE footage_item
-			SET title = ?,
-				description = ?,
-				tags_json = ?
-			WHERE id = ?
-				AND type = ?
-				AND role = ?;
-		`,
-        [
-            metadata.title,
-            metadata.description,
-            JSON.stringify(metadata.tags),
-            footageItemId,
-            FootageType.PHOTO,
-            FootageRole.SELECTED,
-        ],
+            UPDATE footage_item
+            SET title = ?,
+                description = ?,
+                tags_json = ?
+            WHERE id = ?;
+        `,
+        [metadata.title, metadata.description, JSON.stringify(metadata.tags), footageItemId],
     )
 
     return result.changes > 0
@@ -139,15 +190,15 @@ export async function markSelectedFootageItemAsCandidate(
 
     const result = await db.runAsync(
         `
-			UPDATE footage_item
-			SET role = ?,
-				title = NULL,
-				description = COALESCE(?, description),
-				tags_json = NULL
-			WHERE id = ?
-				AND type = ?
-				AND role = ?;
-		`,
+            UPDATE footage_item
+            SET role = ?,
+                title = NULL,
+                description = COALESCE(?, description),
+                tags_json = NULL
+            WHERE id = ?
+              AND type = ?
+              AND role = ?;
+        `,
         [FootageRole.CANDIDATE, description, footageItemId, FootageType.PHOTO, FootageRole.SELECTED],
     )
 
@@ -157,14 +208,14 @@ export async function markSelectedFootageItemAsCandidate(
 export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem[]> {
     const rows = await db.getAllAsync<FootageItemRow>(
         `
-		SELECT
-			*
-		FROM footage_item
-		WHERE is_processed = 0
-			AND type = ?
-			AND role IN (?, ?)
-		ORDER BY created_at ASC, sequence_index ASC;
-		`,
+            SELECT
+                *
+            FROM footage_item
+            WHERE is_processed = 0
+              AND type = ?
+              AND role IN (?, ?)
+            ORDER BY created_at ASC, sequence_index ASC;
+        `,
         [FootageType.PHOTO, FootageRole.CANDIDATE, FootageRole.BURST],
     )
 
@@ -174,14 +225,14 @@ export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem
 export async function markFootageItemSelectedAndProcessed(footageItemId: string): Promise<boolean> {
     const result = await db.runAsync(
         `
-		UPDATE footage_item
-		SET role = ?,
-			is_processed = 1
-		WHERE id = ?
-			AND type = ?
-			AND role IN (?, ?)
-			AND is_processed = 0;
-		`,
+ UPDATE footage_item
+ SET role = ?,
+ is_processed = 1
+ WHERE id = ?
+ AND type = ?
+ AND role IN (?, ?)
+ AND is_processed = 0;
+ `,
         [
             FootageRole.SELECTED,
             footageItemId,
@@ -202,16 +253,34 @@ export async function markFootageItemProcessed(
 
     const result = await db.runAsync(
         `
-		UPDATE footage_item
-		SET is_processed = 1,
-			description = COALESCE(?, description)
-		WHERE id = ?
-			AND type = ?
-			AND role IN (?, ?)
-			AND is_processed = 0;
-		`,
+ UPDATE footage_item
+ SET is_processed = 1,
+ description = COALESCE(?, description)
+ WHERE id = ?
+ AND type = ?
+ AND role IN (?, ?)
+ AND is_processed = 0;
+ `,
         [description, footageItemId, FootageType.PHOTO, FootageRole.CANDIDATE, FootageRole.BURST],
     )
 
     return result.changes > 0
+}
+
+export async function resetProcessedSelectedFootageItems(): Promise<number> {
+    const result = await db.runAsync(
+        `
+ UPDATE footage_item
+ SET is_processed = 0,
+ role = ?,
+ title = NULL,
+ description = NULL,
+ tags_json = NULL
+ WHERE type = ?
+ AND role = ?;
+ `,
+        [FootageRole.CANDIDATE, FootageType.PHOTO, FootageRole.SELECTED],
+    )
+
+    return result.changes
 }

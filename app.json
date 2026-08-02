@@ -2,7 +2,7 @@
     "expo": {
         "name": "lifelog-app",
         "slug": "lifelog-app",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "lifelogapp",
@@ -37,7 +37,8 @@
                 }
             ],
             "expo-font",
-            "expo-asset"
+            "expo-asset",
+            "expo-video"
         ],
         "experiments": {
             "typedRoutes": true,

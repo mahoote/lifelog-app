@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Dimensions, Image, ScrollView, TouchableOpacity } from 'react-native'
 
 import { useGalleryImages } from '@/hooks/useGalleryImages'
+import { FootageType } from '@/types/footageItem'
 
 const THUMB_SIZE = 64
 const THUMB_GAP = 6
@@ -11,21 +12,27 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 interface Props {
     dayKey: string | null
     selectedId: string | null
+    type?: FootageType
     onSelect: (id: string) => void
 }
 
-export default function ThumbnailStrip({ dayKey, selectedId, onSelect }: Props) {
+export default function ThumbnailStrip({
+    dayKey,
+    selectedId,
+    type = FootageType.PHOTO,
+    onSelect,
+}: Props) {
     const scrollRef = useRef<ScrollView>(null)
 
-    const { data: images = [] } = useGalleryImages(dayKey)
+    const { data: items = [] } = useGalleryImages(dayKey, type)
 
     const selectedIndex = useMemo(() => {
         if (!selectedId) {
             return -1
         }
 
-        return images.findIndex(item => item.id === selectedId)
-    }, [images, selectedId])
+        return items.findIndex(item => item.id === selectedId)
+    }, [items, selectedId])
 
     useEffect(() => {
         if (selectedIndex < 0) {
@@ -43,7 +50,7 @@ export default function ThumbnailStrip({ dayKey, selectedId, onSelect }: Props) 
         })
     }, [selectedIndex])
 
-    if (!dayKey || images.length === 0) {
+    if (!dayKey || items.length === 0) {
         return null
     }
 
@@ -59,7 +66,7 @@ export default function ThumbnailStrip({ dayKey, selectedId, onSelect }: Props) 
             }}
             className="flex-grow-0"
         >
-            {images.map(item => {
+            {items.map(item => {
                 const isSelected = item.id === selectedId
 
                 return (

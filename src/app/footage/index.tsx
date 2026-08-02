@@ -1,22 +1,30 @@
+import { faPause, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import { View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import FootageHeader from '@/app/footage/footageHeader'
 import MainImage from '@/app/footage/mainImage'
 import MomentDescription from '@/app/footage/momentDescription'
 import ThumbnailStrip from '@/app/footage/thumbnailStrip'
+import { colors } from '@/constants/colors'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
-import { FootageItem } from '@/types/footageItem'
+import { FootageItem, FootageType } from '@/types/footageItem'
 
 export default function FootageScreen() {
     const [current, setCurrent] = useState<FootageItem | null>(null)
     const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
 
-    const { id } = useLocalSearchParams<{ id: string }>()
+    const { id, type } = useLocalSearchParams<{ id: string; type?: FootageType }>()
     const routeId = Array.isArray(id) ? (id[0] as string) : id
+    const routeType = Array.isArray(type) ? (type[0] as FootageType | undefined) : type
+    const footageType = routeType === FootageType.VIDEO ? FootageType.VIDEO : FootageType.PHOTO
+
+    const isVideo = footageType === FootageType.VIDEO
 
     useEffect(() => {
         if (routeId) {
@@ -28,11 +36,13 @@ export default function FootageScreen() {
         async function fetchFootageItem() {
             if (!selectedId) {
                 setCurrent(null)
+                setIsPlaying(false)
                 return
             }
 
             const item = await getFootageItemById(selectedId)
             setCurrent(item)
+            setIsPlaying(false)
         }
 
         void fetchFootageItem()
@@ -40,36 +50,64 @@ export default function FootageScreen() {
 
     const dayKey = current?.dayKey ?? null
 
-    const { data: images = [] } = useGalleryImages(dayKey)
+    const { data: items = [] } = useGalleryImages(dayKey, footageType)
 
     const selectedIndex = useMemo(() => {
         if (!selectedId) {
             return -1
         }
 
-        return images.findIndex(item => item.id === selectedId)
-    }, [images, selectedId])
+        return items.findIndex(item => item.id === selectedId)
+    }, [items, selectedId])
+
+    const descriptionFallback =
+        footageType === FootageType.VIDEO
+            ? 'This video is used only as context for the memory and does not have a description.'
+            : 'This image is used only as context for the memory and does not have a description.'
 
     return (
         <SafeAreaView className="flex-1 bg-surface">
             <FootageHeader
                 current={selectedIndex >= 0 ? selectedIndex + 1 : 0}
-                total={images.length}
+                total={items.length}
                 date={dayKey ?? ''}
             />
 
             <View className="flex-1">
-                <MainImage uri={current?.fileUri} />
+                <MainImage uri={current?.fileUri} type={footageType} isPlaying={isPlaying} />
 
-                <ThumbnailStrip dayKey={dayKey} selectedId={selectedId} onSelect={setSelectedId} />
+                <ThumbnailStrip
+                    dayKey={dayKey}
+                    selectedId={selectedId}
+                    type={footageType}
+                    onSelect={setSelectedId}
+                />
+
+                {isVideo && (
+                    <View className="items-center px-6 pt-2">
+                        <TouchableOpacity
+                            onPress={() => setIsPlaying(value => !value)}
+                            activeOpacity={0.85}
+                            className="min-w-[132px] flex-row items-center justify-center rounded-full bg-primary px-5 py-3"
+                            accessibilityRole="button"
+                            accessibilityLabel={isPlaying ? 'Pause video' : 'Play video'}
+                        >
+                            <FontAwesomeIcon
+                                icon={isPlaying ? faPause : faPlay}
+                                size={18}
+                                color={colors.onPrimary}
+                            />
+                            <Text className="ml-2 font-atkinson-bold text-[16px] text-on-primary">
+                                {isPlaying ? 'Pause' : 'Play'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 <View className="mt-4 px-6">
                     <MomentDescription
-                        title="Image"
-                        description={
-                            current?.description ??
-                            'This image is used only as context for the memory and does not have a description.'
-                        }
+                        title={footageType === FootageType.VIDEO ? 'Video' : 'Image'}
+                        description={current?.description ?? descriptionFallback}
                     />
                 </View>
             </View>
