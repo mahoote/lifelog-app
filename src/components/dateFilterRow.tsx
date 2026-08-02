@@ -24,7 +24,7 @@ export default function DateFilterRow() {
     const allowedDates: Date[] = galleryDays.map(day => new Date(day.dayKey))
 
     const sheetRef = useRef<BottomSheetModal>(null)
-    const snapPoints = useMemo(() => ['35%'], [])
+    const snapPoints = useMemo(() => ['80%'], [])
 
     const openSheet = () => sheetRef.current?.present()
 

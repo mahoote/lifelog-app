@@ -61,18 +61,18 @@ export default function ImageSection() {
     const groups = groupByTimeOfDay(images)
 
     return (
-        <View className="gap-6">
+        <View>
             {isFetching && (
                 <Text className="font-atkinson-medium text-[12px] text-on-surface-variant">
                     Updating...
                 </Text>
             )}
 
-            <View>
-                <View className="items-end w-full">
-                    <Text>{images.length} images</Text>
-                </View>
+            <View className="items-end w-full">
+                <Text>{images.length} images</Text>
+            </View>
 
+            <View className="gap-6">
                 {groups.map(({ label, items }) => {
                     const rows: FootageItem[][] = []
                     for (let i = 0; i < items.length; i += 3) {
