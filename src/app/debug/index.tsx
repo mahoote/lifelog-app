@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native'
+import { Alert, Pressable, ScrollView, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppHeader from '@/components/appHeader'
 import { generateAiMetadataForSelectedFootageItems } from '@/services/aiImageMetadataService'
 import { exportLifelogDatabaseJson } from '@/utils/exportDatabase'
 
@@ -60,12 +61,8 @@ export default function DebugScreen() {
     return (
         <SafeAreaView className="flex-1 bg-background">
             <ScrollView contentContainerClassName="gap-4 p-4">
-                <View className="gap-2">
-                    <Text className="text-xl font-semibold text-foreground">Debug</Text>
-                    <Text className="text-sm text-muted-foreground">
-                        Developer tools for local testing.
-                    </Text>
-                </View>
+                <AppHeader title="Debug" variant="settings" />
+                <Text className="text-sm text-muted-foreground">Developer tools for local testing.</Text>
 
                 <Pressable
                     disabled={isExporting}
