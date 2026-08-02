@@ -1,8 +1,9 @@
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit'
 import { File } from 'expo-file-system'
+
 import { saveCaptureEvent } from '@/repositories/captureEventRepository'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
-import { downloadFootageById } from '@/services/lifelogService'
+import { ackFootageById, downloadFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
 
@@ -20,7 +21,7 @@ export async function downloadCaptureEventsFootage(
 ): Promise<
     {
         captureEventId: string | null
-        downloads: { id: string | null; uri: string | null; continue: boolean }[]
+        downloads: { id: string | null; uri: string | null; continue: boolean; acked: boolean }[]
     }[]
 > {
     const results = []
@@ -60,7 +61,7 @@ export async function downloadCaptureEventsFootage(
  */
 export async function downloadCaptureEventFootage(
     captureEvent: CaptureEvent,
-): Promise<{ id: string | null; uri: string | null; continue: boolean }[]> {
+): Promise<{ id: string | null; uri: string | null; continue: boolean; acked: boolean }[]> {
     if (!captureEvent.footageItems) {
         return []
     }
@@ -78,10 +79,13 @@ export async function downloadCaptureEventFootage(
             const existingFile = new File(existingFootageItem.fileUri)
 
             if (existingFile.exists && existingFile.size > 0) {
+                const acked = await ackFootageById(footageItem.id)
+
                 results.push({
                     id: footageItem.id,
                     uri: existingFootageItem.fileUri,
                     continue: true,
+                    acked,
                 })
                 continue
             }
@@ -105,9 +109,12 @@ export async function downloadCaptureEventFootage(
             footageItem.fileUri,
         )
 
+        const acked = result.uri ? await ackFootageById(footageItem.id) : false
+
         results.push({
             id: footageItem.id,
             ...result,
+            acked,
         })
 
         if (!result.continue) {
