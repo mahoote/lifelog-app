@@ -110,14 +110,14 @@ export async function updateFootageItemAiMetadata(
 ): Promise<boolean> {
     const result = await db.runAsync(
         `
-			UPDATE footage_item
-			SET title = ?,
-				description = ?,
-				tags_json = ?
-			WHERE id = ?
-				AND type = ?
-				AND role = ?;
-		`,
+            UPDATE footage_item
+            SET title = ?,
+                description = ?,
+                tags_json = ?
+            WHERE id = ?
+              AND type = ?
+              AND role = ?;
+        `,
         [
             metadata.title,
             metadata.description,
@@ -139,15 +139,15 @@ export async function markSelectedFootageItemAsCandidate(
 
     const result = await db.runAsync(
         `
-			UPDATE footage_item
-			SET role = ?,
-				title = NULL,
-				description = COALESCE(?, description),
-				tags_json = NULL
-			WHERE id = ?
-				AND type = ?
-				AND role = ?;
-		`,
+            UPDATE footage_item
+            SET role = ?,
+                title = NULL,
+                description = COALESCE(?, description),
+                tags_json = NULL
+            WHERE id = ?
+              AND type = ?
+              AND role = ?;
+        `,
         [FootageRole.CANDIDATE, description, footageItemId, FootageType.PHOTO, FootageRole.SELECTED],
     )
 
@@ -157,14 +157,14 @@ export async function markSelectedFootageItemAsCandidate(
 export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem[]> {
     const rows = await db.getAllAsync<FootageItemRow>(
         `
-		SELECT
-			*
-		FROM footage_item
-		WHERE is_processed = 0
-			AND type = ?
-			AND role IN (?, ?)
-		ORDER BY created_at ASC, sequence_index ASC;
-		`,
+            SELECT
+                *
+            FROM footage_item
+            WHERE is_processed = 0
+              AND type = ?
+              AND role IN (?, ?)
+            ORDER BY created_at ASC, sequence_index ASC;
+        `,
         [FootageType.PHOTO, FootageRole.CANDIDATE, FootageRole.BURST],
     )
 
@@ -174,14 +174,14 @@ export async function getUnprocessedCandidateFootageItems(): Promise<FootageItem
 export async function markFootageItemSelectedAndProcessed(footageItemId: string): Promise<boolean> {
     const result = await db.runAsync(
         `
-		UPDATE footage_item
-		SET role = ?,
-			is_processed = 1
-		WHERE id = ?
-			AND type = ?
-			AND role IN (?, ?)
-			AND is_processed = 0;
-		`,
+            UPDATE footage_item
+            SET role = ?,
+                is_processed = 1
+            WHERE id = ?
+              AND type = ?
+              AND role IN (?, ?)
+              AND is_processed = 0;
+        `,
         [
             FootageRole.SELECTED,
             footageItemId,
@@ -202,16 +202,34 @@ export async function markFootageItemProcessed(
 
     const result = await db.runAsync(
         `
-		UPDATE footage_item
-		SET is_processed = 1,
-			description = COALESCE(?, description)
-		WHERE id = ?
-			AND type = ?
-			AND role IN (?, ?)
-			AND is_processed = 0;
-		`,
+            UPDATE footage_item
+            SET is_processed = 1,
+                description = COALESCE(?, description)
+            WHERE id = ?
+              AND type = ?
+              AND role IN (?, ?)
+              AND is_processed = 0;
+        `,
         [description, footageItemId, FootageType.PHOTO, FootageRole.CANDIDATE, FootageRole.BURST],
     )
 
     return result.changes > 0
+}
+
+export async function resetProcessedSelectedFootageItems(): Promise<number> {
+    const result = await db.runAsync(
+        `
+ UPDATE footage_item
+ SET is_processed = 0,
+ role = ?,
+ title = NULL,
+ description = NULL,
+ tags_json = NULL
+ WHERE type = ?
+ AND role = ?;
+ `,
+        [FootageRole.CANDIDATE, FootageType.PHOTO, FootageRole.SELECTED],
+    )
+
+    return result.changes
 }
