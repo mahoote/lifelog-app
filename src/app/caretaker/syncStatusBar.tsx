@@ -36,6 +36,8 @@ export default function SyncStatusBar() {
             return
         }
 
+        const startedAt = Date.now()
+
         setProcessLoading(true)
 
         let captureEventCount = 0
@@ -102,9 +104,13 @@ export default function SyncStatusBar() {
             setSyncStep('refreshing')
             await invalidateQueries(queryClient)
 
+            const totalTimeUsed = formatElapsedTime(Date.now() - startedAt)
+
             Alert.alert(
                 'Sync complete',
                 [
+                    `Total time used: ${totalTimeUsed}`,
+                    '',
                     `Capture events: ${captureEventCount}`,
                     `Pending footage: ${pendingFootageCount}`,
                     '',
@@ -134,10 +140,13 @@ export default function SyncStatusBar() {
             )
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Could not complete sync.'
+            const totalTimeUsed = formatElapsedTime(Date.now() - startedAt)
 
             Alert.alert(
                 'Sync failed',
                 [
+                    `Total time used: ${totalTimeUsed}`,
+                    '',
                     `Step: ${getSyncStepLabel(syncStep)}`,
                     message,
                     '',
@@ -234,4 +243,13 @@ function getSyncStepLabel(step: SyncStep): string {
         default:
             return 'Idle'
     }
+}
+
+function formatElapsedTime(milliseconds: number): string {
+    const safeMilliseconds = Math.max(0, milliseconds)
+    const minutes = Math.floor(safeMilliseconds / 60_000)
+    const seconds = Math.floor((safeMilliseconds % 60_000) / 1000)
+    const remainingMilliseconds = safeMilliseconds % 1000
+
+    return `${minutes}m ${seconds}s ${remainingMilliseconds}ms`
 }
