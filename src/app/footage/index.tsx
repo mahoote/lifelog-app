@@ -1,12 +1,15 @@
+import { faPause, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import { View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import FootageHeader from '@/app/footage/footageHeader'
 import MainImage from '@/app/footage/mainImage'
 import MomentDescription from '@/app/footage/momentDescription'
 import ThumbnailStrip from '@/app/footage/thumbnailStrip'
+import { colors } from '@/constants/colors'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
 import { FootageItem, FootageType } from '@/types/footageItem'
@@ -20,6 +23,8 @@ export default function FootageScreen() {
     const routeId = Array.isArray(id) ? (id[0] as string) : id
     const routeType = Array.isArray(type) ? (type[0] as FootageType | undefined) : type
     const footageType = routeType === FootageType.VIDEO ? FootageType.VIDEO : FootageType.PHOTO
+
+    const isVideo = footageType === FootageType.VIDEO
 
     useEffect(() => {
         if (routeId) {
@@ -69,12 +74,7 @@ export default function FootageScreen() {
             />
 
             <View className="flex-1">
-                <MainImage
-                    uri={current?.fileUri}
-                    type={footageType}
-                    isPlaying={isPlaying}
-                    onPlayPause={() => setIsPlaying(value => !value)}
-                />
+                <MainImage uri={current?.fileUri} type={footageType} isPlaying={isPlaying} />
 
                 <ThumbnailStrip
                     dayKey={dayKey}
@@ -82,6 +82,27 @@ export default function FootageScreen() {
                     type={footageType}
                     onSelect={setSelectedId}
                 />
+
+                {isVideo && (
+                    <View className="items-center px-6 pt-2">
+                        <TouchableOpacity
+                            onPress={() => setIsPlaying(value => !value)}
+                            activeOpacity={0.85}
+                            className="min-w-[132px] flex-row items-center justify-center rounded-full bg-primary px-5 py-3"
+                            accessibilityRole="button"
+                            accessibilityLabel={isPlaying ? 'Pause video' : 'Play video'}
+                        >
+                            <FontAwesomeIcon
+                                icon={isPlaying ? faPause : faPlay}
+                                size={18}
+                                color={colors.onPrimary}
+                            />
+                            <Text className="ml-2 font-atkinson-bold text-[16px] text-on-primary">
+                                {isPlaying ? 'Pause' : 'Play'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 <View className="mt-4 px-6">
                     <MomentDescription
