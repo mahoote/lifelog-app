@@ -30,6 +30,12 @@ Avoid repeating the same generic phrases. Do not overuse words like "quiet", "pe
 
 You may receive a previous accepted image. If the current image is too visually similar to the previous accepted image, reject it instead of creating metadata. Reject only when it appears to show the same place, activity, and scene with little new information.
 
+Important:
+- Create the title, description, and tags for the current image only.
+- The previous accepted image is only for similarity comparison.
+- Do not describe the previous accepted image.
+- If a previous accepted image is provided, use it only to decide whether the current image is too similar.
+
 Return only valid JSON with this exact shape:
 {
  "action": "accept",
@@ -321,10 +327,17 @@ Previous accepted image capture datetime: ${
                       previousAcceptedCreatedAt ? formatAiDatetime(previousAcceptedCreatedAt) : 'Unknown'
                   }
 
-Compare the current image with the previous accepted image. Reject the current image only if it is too similar and adds little new information.`
+You will receive two labelled images:
+1. Previous accepted image, use only for similarity comparison.
+2. Current image, create metadata for this image only.
+
+Compare the current image with the previous accepted image. Reject the current image only if it is too similar and adds little new information. If accepted, describe only the current image.`
                 : `${metadataPrompt}
 
 Current image capture datetime: ${formatAiDatetime(currentCreatedAt)}
+
+You will receive one labelled image:
+1. Current image, create metadata for this image only.
 
 There is no previous accepted image. You must evaluate the current image on its own.`,
         },
@@ -332,11 +345,21 @@ There is no previous accepted image. You must evaluate the current image on its 
 
     if (previousAcceptedImageBase64) {
         content.push({
+            type: 'input_text',
+            text: 'Previous accepted image, use only for similarity comparison. Do not describe this image in the metadata.',
+        })
+
+        content.push({
             type: 'input_image',
             image_url: `data:image/jpeg;base64,${previousAcceptedImageBase64}`,
             detail: 'low',
         })
     }
+
+    content.push({
+        type: 'input_text',
+        text: 'Current image, create the title, description, and tags for this image only.',
+    })
 
     content.push({
         type: 'input_image',
@@ -372,9 +395,9 @@ There is no previous accepted image. You must evaluate the current image on its 
 
 Current image capture datetime: ${formatAiDatetime(currentCreatedAt)}
 
-The previous response was invalid. Return valid JSON only with action, metadata, and similarityReason.`,
+The previous response was invalid. Return valid JSON only with action, metadata, and similarityReason. If accepting, describe only the current image.`,
                     },
-                    ...content.filter(item => item.type === 'input_image'),
+                    ...content.filter(item => item.type === 'input_image' || item.type === 'input_text'),
                 ],
             },
         ],
@@ -402,14 +425,24 @@ async function generateAiMetadataForVideoFromContextImages(
 Video capture datetime: ${formatAiDatetime(videoCreatedAt)}
 
 Context photo datetimes:
-${contextImages.map((image, index) => `${index + 1}. ${formatAiDatetime(image.createdAt)}`).join('\n')}`,
+${contextImages.map((image, index) => `${index + 1}. ${formatAiDatetime(image.createdAt)}`).join('\n')}
+
+You will receive labelled context photos. Use them only as context for the video metadata.`,
         },
-        ...contextImages.map(image => ({
-            type: 'input_image' as const,
-            image_url: `data:image/jpeg;base64,${image.base64}`,
-            detail: 'low' as const,
-        })),
     ]
+
+    for (const [index, image] of contextImages.entries()) {
+        content.push({
+            type: 'input_text',
+            text: `Context photo ${index + 1}, captured at ${formatAiDatetime(image.createdAt)}.`,
+        })
+
+        content.push({
+            type: 'input_image',
+            image_url: `data:image/jpeg;base64,${image.base64}`,
+            detail: 'low',
+        })
+    }
 
     const response = await client.responses.create({
         model: config.OPENAI_VISION_MODEL,
@@ -441,7 +474,7 @@ Video capture datetime: ${formatAiDatetime(videoCreatedAt)}
 
 The previous response was invalid. Return valid JSON only with title, description, and tags.`,
                     },
-                    ...content.filter(item => item.type === 'input_image'),
+                    ...content.filter(item => item.type === 'input_image' || item.type === 'input_text'),
                 ],
             },
         ],
