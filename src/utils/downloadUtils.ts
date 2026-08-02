@@ -3,9 +3,17 @@ import { File } from 'expo-file-system'
 
 import { saveCaptureEvent } from '@/repositories/captureEventRepository'
 import { getFootageItemById } from '@/repositories/footageItemRepository'
-import { ackFootageById, downloadFootageById } from '@/services/lifelogService'
+import { ackFootageById, downloadFootageById, failFootageById } from '@/services/lifelogService'
 import { AppDispatch } from '@/store/hooks'
 import { CaptureEvent } from '@/types/captureEvent'
+
+interface FootageDownloadResult {
+    id: string | null
+    uri: string | null
+    continue: boolean
+    acked: boolean
+    failedReported: boolean
+}
 
 /**
  * Downloads all the capture events and their footage items.
@@ -21,7 +29,7 @@ export async function downloadCaptureEventsFootage(
 ): Promise<
     {
         captureEventId: string | null
-        downloads: { id: string | null; uri: string | null; continue: boolean; acked: boolean }[]
+        downloads: FootageDownloadResult[]
     }[]
 > {
     const results = []
@@ -61,12 +69,12 @@ export async function downloadCaptureEventsFootage(
  */
 export async function downloadCaptureEventFootage(
     captureEvent: CaptureEvent,
-): Promise<{ id: string | null; uri: string | null; continue: boolean; acked: boolean }[]> {
+): Promise<FootageDownloadResult[]> {
     if (!captureEvent.footageItems) {
         return []
     }
 
-    const results = []
+    const results: FootageDownloadResult[] = []
 
     for (const footageItem of captureEvent.footageItems) {
         if (!footageItem.id) {
@@ -86,6 +94,7 @@ export async function downloadCaptureEventFootage(
                     uri: existingFootageItem.fileUri,
                     continue: true,
                     acked,
+                    failedReported: false,
                 })
                 continue
             }
@@ -110,11 +119,13 @@ export async function downloadCaptureEventFootage(
         )
 
         const acked = result.uri ? await ackFootageById(footageItem.id) : false
+        const failedReported = result.uri ? false : await failFootageById(footageItem.id)
 
         results.push({
             id: footageItem.id,
             ...result,
             acked,
+            failedReported,
         })
 
         if (!result.continue) {

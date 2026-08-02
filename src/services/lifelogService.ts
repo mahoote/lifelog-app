@@ -71,6 +71,42 @@ export async function ackFootageById(fileId: string): Promise<boolean> {
 }
 
 /**
+ * Reports that a footage file failed to download.
+ * @param fileId - The footage file id to report as failed.
+ * @return True when the failed endpoint succeeds.
+ */
+export async function failFootageById(fileId: string): Promise<boolean> {
+    const BASE_URL = getLifelogApi()
+
+    if (!BASE_URL) {
+        console.error(`Cannot report failed footage ${fileId}. Lifelog API base URL is not set.`)
+        return false
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/failed`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file_id: fileId,
+            }),
+        })
+
+        if (!response.ok) {
+            console.error(`Failed to report failed footage ${fileId}: ${response.status}`)
+            return false
+        }
+
+        return true
+    } catch (error) {
+        console.error(`Failed to report failed footage ${fileId}:`, error)
+        return false
+    }
+}
+
+/**
  * Downloads the footage file from the lifelog api by its id.
  * Stored inside private document directory on the phone.
  * If the file is a video, it's stored within the "videos" folder.
@@ -145,7 +181,6 @@ export async function downloadFootageById(
     } catch (error) {
         console.error(`Failed to download footage ${id}:`, error)
 
-        // "Continue" because could just be asking for non-existing footage.
         return { uri: null, continue: false }
     }
 }
