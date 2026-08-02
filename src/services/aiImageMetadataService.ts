@@ -24,6 +24,8 @@ You are helping create useful memory cues for a dementia-focused lifelogging app
 
 The image comes from a first-person wearable camera. The generated text may be shown later to help a person revisit moments from their day. Write in a simple, natural, familiar style.
 
+You will receive the image capture datetime. Use it only as helpful context for time of day, such as morning, afternoon, evening, or night. Do not include the exact timestamp unless it is useful and natural.
+
 Avoid repeating the same generic phrases. Do not overuse words like "quiet", "peaceful", "calm", or "moment". Use them only when they are strongly supported by the image. Prefer concrete activity and place descriptions.
 
 You may receive a previous accepted image. If the current image is too visually similar to the previous accepted image, reject it instead of creating metadata. Reject only when it appears to show the same place, activity, and scene with little new information.
@@ -52,10 +54,11 @@ Style:
 - Focus on what makes this image useful as a memory cue.
 - Prefer concrete wording such as "In the kitchen", "Walking outside", "At the shops", "Sitting at the table", "Looking at the garden", or "Getting ready to leave".
 - It is acceptable to make gentle everyday assumptions, for example "having a meal", "going for a walk", "spending time at home", or "being outside", when the image supports it.
+- Use the capture datetime to make time-of-day wording more accurate when relevant.
 - Vary the wording between images.
 - Avoid clinical, technical, or overly objective wording.
 - Avoid saying "the image shows" unless needed.
-- Do not mention dementia, memory loss, AI, metadata, camera, or wearable device in the output.
+- Do not mention dementia, memory loss, AI, metadata, camera, wearable device, or timestamp in the output.
 
 Safety:
 - Do not identify private individuals.
@@ -69,7 +72,7 @@ Safety:
 Tags:
 - Tags must be short lowercase strings.
 - Tags should describe useful everyday context.
-- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car".
+- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car", "morning", "afternoon", "evening", "night".
 - Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
 `
 
@@ -77,6 +80,8 @@ const videoMetadataPrompt = `
 You are helping create useful memory cues for a dementia-focused lifelogging app.
 
 You will receive several first-person photos from the same capture event as a video. Use the photos as visual context to create metadata for the video. The generated text may be shown later to help a person revisit moments from their day. Write in a simple, natural, familiar style.
+
+You will receive the video capture datetime and the context photo datetimes. Use them only as helpful context for time of day, such as morning, afternoon, evening, or night. Do not include exact timestamps unless useful and natural.
 
 Return only valid JSON with this exact shape:
 {
@@ -91,8 +96,9 @@ Style:
 - Focus on what the video is likely about based on the surrounding photos.
 - Prefer concrete wording such as "In the kitchen", "Walking outside", "At the shops", "Sitting at the table", "Looking at the garden", or "Getting ready to leave".
 - It is acceptable to make gentle everyday assumptions when the photos support them.
+- Use the capture datetime to make time-of-day wording more accurate when relevant.
 - Avoid saying "the video shows" or "the photos show" unless needed.
-- Do not mention dementia, memory loss, AI, metadata, camera, wearable device, burst photos, or capture events in the output.
+- Do not mention dementia, memory loss, AI, metadata, camera, wearable device, burst photos, capture events, or timestamps in the output.
 
 Safety:
 - Do not identify private individuals.
@@ -106,7 +112,7 @@ Safety:
 Tags:
 - Tags must be short lowercase strings.
 - Tags should describe useful everyday context.
-- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car".
+- Prefer tags such as "home", "meal", "outside", "walking", "shopping", "kitchen", "garden", "travel", "resting", "pets", "nature", "street", "indoors", "table", "food", "doorway", "car", "morning", "afternoon", "evening", "night".
 - Avoid sensitive tags about health, identity, emotion, ethnicity, religion, politics, or disability.
 `
 
@@ -139,6 +145,7 @@ export async function generateAiMetadataForSelectedFootageItems(
 
     let previousAcceptedImageBase64: string | null = null
     let previousAcceptedItemId: string | null = null
+    let previousAcceptedCreatedAt: string | null = null
 
     for (const item of items) {
         if (!item.id) {
@@ -158,7 +165,9 @@ export async function generateAiMetadataForSelectedFootageItems(
             const decision = await generateAiMetadataDecisionForFootageItem(
                 client,
                 currentImageBase64,
+                item.createdAt,
                 previousAcceptedImageBase64,
+                previousAcceptedCreatedAt,
             )
 
             if (decision.action === 'reject_similar') {
@@ -197,6 +206,7 @@ export async function generateAiMetadataForSelectedFootageItems(
 
             previousAcceptedImageBase64 = currentImageBase64
             previousAcceptedItemId = item.id
+            previousAcceptedCreatedAt = item.createdAt
             summary.succeeded += 1
         } catch (error) {
             summary.failed += 1
@@ -259,15 +269,19 @@ export async function generateAiMetadataForVideoFootageItems(
             }
 
             const sampledPhotos = sampleContextPhotos(contextPhotos, MAX_VIDEO_CONTEXT_IMAGES)
-            const imageBase64Values = await readImagesAsBase64(sampledPhotos)
+            const contextImages = await readContextImagesAsBase64(sampledPhotos)
 
-            if (imageBase64Values.length === 0) {
+            if (contextImages.length === 0) {
                 summary.failed += 1
                 console.warn(`No readable context photos found for video footage item ${video.id}`)
                 continue
             }
 
-            const metadata = await generateAiMetadataForVideoFromContextImages(client, imageBase64Values)
+            const metadata = await generateAiMetadataForVideoFromContextImages(
+                client,
+                video.createdAt,
+                contextImages,
+            )
 
             const wasSaved = await updateFootageItemAiMetadata(video.id, metadata)
 
@@ -292,7 +306,9 @@ export async function generateAiMetadataForVideoFootageItems(
 async function generateAiMetadataDecisionForFootageItem(
     client: OpenAI,
     currentImageBase64: string,
+    currentCreatedAt: string,
     previousAcceptedImageBase64: string | null,
+    previousAcceptedCreatedAt: string | null,
 ): Promise<AiImageMetadataDecision> {
     const content: OpenAI.Responses.ResponseInputContent[] = [
         {
@@ -300,8 +316,15 @@ async function generateAiMetadataDecisionForFootageItem(
             text: previousAcceptedImageBase64
                 ? `${metadataPrompt}
 
+Current image capture datetime: ${formatAiDatetime(currentCreatedAt)}
+Previous accepted image capture datetime: ${
+                      previousAcceptedCreatedAt ? formatAiDatetime(previousAcceptedCreatedAt) : 'Unknown'
+                  }
+
 Compare the current image with the previous accepted image. Reject the current image only if it is too similar and adds little new information.`
                 : `${metadataPrompt}
+
+Current image capture datetime: ${formatAiDatetime(currentCreatedAt)}
 
 There is no previous accepted image. You must evaluate the current image on its own.`,
         },
@@ -347,6 +370,8 @@ There is no previous accepted image. You must evaluate the current image on its 
                         type: 'input_text',
                         text: `${metadataPrompt}
 
+Current image capture datetime: ${formatAiDatetime(currentCreatedAt)}
+
 The previous response was invalid. Return valid JSON only with action, metadata, and similarityReason.`,
                     },
                     ...content.filter(item => item.type === 'input_image'),
@@ -366,16 +391,22 @@ The previous response was invalid. Return valid JSON only with action, metadata,
 
 async function generateAiMetadataForVideoFromContextImages(
     client: OpenAI,
-    imageBase64Values: string[],
+    videoCreatedAt: string,
+    contextImages: { base64: string; createdAt: string }[],
 ): Promise<AiImageMetadata> {
     const content: OpenAI.Responses.ResponseInputContent[] = [
         {
             type: 'input_text',
-            text: videoMetadataPrompt,
+            text: `${videoMetadataPrompt}
+
+Video capture datetime: ${formatAiDatetime(videoCreatedAt)}
+
+Context photo datetimes:
+${contextImages.map((image, index) => `${index + 1}. ${formatAiDatetime(image.createdAt)}`).join('\n')}`,
         },
-        ...imageBase64Values.map(imageBase64 => ({
+        ...contextImages.map(image => ({
             type: 'input_image' as const,
-            image_url: `data:image/jpeg;base64,${imageBase64}`,
+            image_url: `data:image/jpeg;base64,${image.base64}`,
             detail: 'low' as const,
         })),
     ]
@@ -405,6 +436,8 @@ async function generateAiMetadataForVideoFromContextImages(
                     {
                         type: 'input_text',
                         text: `${videoMetadataPrompt}
+
+Video capture datetime: ${formatAiDatetime(videoCreatedAt)}
 
 The previous response was invalid. Return valid JSON only with title, description, and tags.`,
                     },
@@ -437,19 +470,25 @@ async function readImageAsBase64(fileUri: string): Promise<string> {
     return file.base64()
 }
 
-async function readImagesAsBase64(items: FootageItem[]): Promise<string[]> {
-    const base64Values: string[] = []
+async function readContextImagesAsBase64(
+    items: FootageItem[],
+): Promise<{ base64: string; createdAt: string }[]> {
+    const contextImages: { base64: string; createdAt: string }[] = []
 
     for (const item of items) {
         try {
-            const imageBase64 = await readImageAsBase64(item.fileUri)
-            base64Values.push(imageBase64)
+            const base64 = await readImageAsBase64(item.fileUri)
+
+            contextImages.push({
+                base64,
+                createdAt: item.createdAt,
+            })
         } catch (error) {
             console.warn(`Skipping unreadable context photo ${item.id}`, error)
         }
     }
 
-    return base64Values
+    return contextImages
 }
 
 function sampleContextPhotos(items: FootageItem[], maxCount: number): FootageItem[] {
@@ -466,6 +505,34 @@ function sampleContextPhotos(items: FootageItem[], maxCount: number): FootageIte
     }
 
     return result
+}
+
+function formatAiDatetime(value: string): string {
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+        return value
+    }
+
+    return `${date.toISOString()} (${getTimeOfDayLabel(date)})`
+}
+
+function getTimeOfDayLabel(date: Date): string {
+    const hour = date.getHours()
+
+    if (hour >= 5 && hour < 12) {
+        return 'morning'
+    }
+
+    if (hour >= 12 && hour < 17) {
+        return 'afternoon'
+    }
+
+    if (hour >= 17 && hour < 22) {
+        return 'evening'
+    }
+
+    return 'night'
 }
 
 function hasAiMetadata(item: FootageItem): boolean {
