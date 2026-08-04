@@ -7,7 +7,6 @@ import { colors } from '@/constants/colors'
 import { getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { getLifelogApi } from '@/utils/apiUtils'
 
 export default function DeviceStatusCard() {
     const dispatch = useAppDispatch()
@@ -50,7 +49,7 @@ export default function DeviceStatusCard() {
 
             Alert.alert(
                 'Connection error',
-                `Something went wrong while trying to connect to the glasses. Please check the IP address and try again. \nURL: ${getLifelogApi()}, \nEnv IP: ${process.env.EXPO_PUBLIC_LIFELOG_API_IP}, \nEnv open api:${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+                'Something went wrong while trying to connect to the glasses. Please check the IP address and try again.',
             )
         } finally {
             setConnectLoading(false)
