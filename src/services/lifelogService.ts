@@ -6,7 +6,7 @@ import { CaptureEvent, CaptureEventResponse } from '@/types/captureEvent'
 import { FootageType } from '@/types/footageItem'
 import { LifelogHealth } from '@/types/lifelog'
 import { getLifelogApi, lifelogGet } from '@/utils/apiUtils'
-import { getUsedFootageStorageBytes } from '@/utils/storageUtils'
+import { makeRoomForFootageDownload } from '@/utils/storageUtils'
 
 /**
  * Fetches the current state of the lifelog api.
@@ -124,12 +124,10 @@ export async function downloadFootageById(
     filePath: string,
 ): Promise<{ uri: string | null; continue: boolean }> {
     try {
-        const usedBytes = getUsedFootageStorageBytes()
+        const hasRoomForDownload = makeRoomForFootageDownload(sizeBytes, config.MAX_STORAGE_BYTES)
 
-        if (usedBytes + sizeBytes > config.MAX_STORAGE_BYTES) {
-            console.error(
-                `Not enough storage to download footage ${id}. Used: ${usedBytes}, Size: ${sizeBytes}, Max: ${config.MAX_STORAGE_BYTES}`,
-            )
+        if (!hasRoomForDownload) {
+            console.error(`Not enough storage to download footage ${id}.`)
 
             return { uri: null, continue: false }
         }
