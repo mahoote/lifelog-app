@@ -7,14 +7,13 @@ on:
 jobs:
     preview-update:
         if: |
-            (github.event.action == 'labeled' && github.event.label.name == 'eas-update-all:preview') ||
-            (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'eas-update-all:preview'))
-
+            (github.event.action == 'labeled' && github.event.label.name == 'eas-update-android:preview') ||
+            (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'eas-update-android:preview'))
         runs-on: ubuntu-latest
 
         # Prevent multiple pushes spamming EAS updates
         concurrency:
-            group: preview-update-${{ github.event.pull_request.number }}
+            group: android-preview-update-${{ github.event.pull_request.number }}
             cancel-in-progress: true
 
         steps:
@@ -41,20 +40,16 @@ jobs:
                   npx expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
                   echo "::endgroup::"
 
-            - name: 🔄 Update Preview Channel
+            - name: 🔄 Update Android Preview Channel
               env:
                   APP_VARIANT: ${{ secrets.APP_VARIANT }}
                   SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
                   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
               run: |
-                  echo "::group::Running EAS Update"
-
+                  echo "::group::Running Android EAS Update"
                   BRANCH="${{ github.head_ref }}"
                   COMMIT_MSG=$(git log -1 --pretty=%s)
                   MESSAGE="$BRANCH - $COMMIT_MSG"
-
                   echo "ℹ️ Update message: $MESSAGE"
-
-                  eas update --channel preview --message "$MESSAGE"
-
+                  eas update --channel preview --platform android --message "$MESSAGE"
                   echo "::endgroup::"
