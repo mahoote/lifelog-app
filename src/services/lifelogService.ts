@@ -11,10 +11,8 @@ import { makeRoomForFootageDownload } from '@/utils/storageUtils'
 /**
  * Fetches the current state of the lifelog api.
  */
-export async function getLifelogHealth(): Promise<LifelogHealth | null> {
-    const response = await lifelogGet('health', 5_000)
-
-    if (!response) return null
+export async function getLifelogHealth(): Promise<LifelogHealth> {
+    const response = await lifelogGet('health', 5_000, 'Failed to reach lifelog health endpoint.')
 
     return (await response.json()) as LifelogHealth
 }
@@ -25,9 +23,7 @@ export async function getLifelogHealth(): Promise<LifelogHealth | null> {
  * @return An array of CaptureEvent objects.
  */
 export async function getLifelogPendingFootage(): Promise<CaptureEvent[]> {
-    const response = await lifelogGet('footage')
-
-    if (!response) return []
+    const response = await lifelogGet('footage', 10_000, 'Failed to fetch pending footage.')
 
     const captureEvents = (await response.json()) as CaptureEventResponse[]
 
@@ -40,34 +36,23 @@ export async function getLifelogPendingFootage(): Promise<CaptureEvent[]> {
  * @return True when the ack endpoint succeeds.
  */
 export async function ackFootageById(fileId: string): Promise<boolean> {
-    const BASE_URL = getLifelogApi()
+    const baseUrl = getLifelogApi()
 
-    if (!BASE_URL) {
-        console.error(`Cannot ack footage ${fileId}. Lifelog API base URL is not set.`)
-        return false
+    const response = await fetch(`${baseUrl}/ack`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            file_id: fileId,
+        }),
+    })
+
+    if (!response.ok) {
+        throw new Error(`Failed to ack footage ${fileId}. Status: ${response.status}`)
     }
 
-    try {
-        const response = await fetch(`${BASE_URL}/ack`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                file_id: fileId,
-            }),
-        })
-
-        if (!response.ok) {
-            console.error(`Failed to ack footage ${fileId}: ${response.status}`)
-            return false
-        }
-
-        return true
-    } catch (error) {
-        console.error(`Failed to ack footage ${fileId}:`, error)
-        return false
-    }
+    return true
 }
 
 /**
@@ -76,34 +61,23 @@ export async function ackFootageById(fileId: string): Promise<boolean> {
  * @return True when the failed endpoint succeeds.
  */
 export async function failFootageById(fileId: string): Promise<boolean> {
-    const BASE_URL = getLifelogApi()
+    const baseUrl = getLifelogApi()
 
-    if (!BASE_URL) {
-        console.error(`Cannot report failed footage ${fileId}. Lifelog API base URL is not set.`)
-        return false
+    const response = await fetch(`${baseUrl}/failed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            file_id: fileId,
+        }),
+    })
+
+    if (!response.ok) {
+        throw new Error(`Failed to report failed footage ${fileId}. Status: ${response.status}`)
     }
 
-    try {
-        const response = await fetch(`${BASE_URL}/failed`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                file_id: fileId,
-            }),
-        })
-
-        if (!response.ok) {
-            console.error(`Failed to report failed footage ${fileId}: ${response.status}`)
-            return false
-        }
-
-        return true
-    } catch (error) {
-        console.error(`Failed to report failed footage ${fileId}:`, error)
-        return false
-    }
+    return true
 }
 
 /**
@@ -122,63 +96,48 @@ export async function downloadFootageById(
     sizeBytes: number,
     type: FootageType,
     filePath: string,
-): Promise<{ uri: string | null; continue: boolean }> {
-    try {
-        const hasRoomForDownload = makeRoomForFootageDownload(sizeBytes, config.MAX_STORAGE_BYTES)
+): Promise<{ uri: string; continue: boolean }> {
+    const hasRoomForDownload = makeRoomForFootageDownload(sizeBytes, config.MAX_STORAGE_BYTES)
 
-        if (!hasRoomForDownload) {
-            console.error(`Not enough storage to download footage ${id}.`)
-
-            return { uri: null, continue: false }
-        }
-
-        const BASE_URL = getLifelogApi()
-
-        if (!BASE_URL) {
-            return { uri: null, continue: false }
-        }
-
-        const url = `${BASE_URL}/footage/${id}`
-
-        const originalFileName = filePath.split('/').pop() ?? id
-        const directory =
-            type === FootageType.VIDEO
-                ? new Directory(Paths.document, 'videos')
-                : new Directory(Paths.document, 'images')
-
-        if (!directory.exists) {
-            directory.create()
-        }
-
-        const file = new File(directory, originalFileName)
-
-        if (file.exists) {
-            if (file.size > 0) {
-                console.info(`Footage ${id} already exists at ${file.uri}. Skipping download.`)
-                return { uri: file.uri, continue: true }
-            }
-
-            console.warn(`Footage ${id} exists but is empty. Deleting and retrying download.`)
-            file.delete()
-        }
-
-        await File.downloadFileAsync(url, file)
-
-        if (!file.exists) {
-            console.warn(`Downloaded footage ${id}, but the file does not exist at ${file.uri}.`)
-            return { uri: null, continue: true }
-        }
-
-        if (file.size <= 0) {
-            console.warn(`Downloaded footage ${id}, but the file is empty. Discarding.`)
-            file.delete()
-            return { uri: null, continue: true }
-        }
-
-        return { uri: file.uri, continue: true }
-    } catch (error) {
-        console.error(`Failed to download footage ${id}:`, error)
-
-        return { uri: null, continue: false }
+    if (!hasRoomForDownload) {
+        throw new Error(`Not enough storage to download footage ${id}.`)
     }
+
+    const baseUrl = getLifelogApi()
+    const url = `${baseUrl}/footage/${id}`
+
+    const originalFileName = filePath.split('/').pop() ?? id
+    const directory =
+        type === FootageType.VIDEO
+            ? new Directory(Paths.document, 'videos')
+            : new Directory(Paths.document, 'images')
+
+    if (!directory.exists) {
+        directory.create()
+    }
+
+    const file = new File(directory, originalFileName)
+
+    if (file.exists) {
+        if (file.size > 0) {
+            console.info(`Footage ${id} already exists at ${file.uri}. Skipping download.`)
+            return { uri: file.uri, continue: true }
+        }
+
+        console.warn(`Footage ${id} exists but is empty. Deleting and retrying download.`)
+        file.delete()
+    }
+
+    await File.downloadFileAsync(url, file)
+
+    if (!file.exists) {
+        throw new Error(`Downloaded footage ${id}, but the file does not exist at ${file.uri}.`)
+    }
+
+    if (file.size <= 0) {
+        file.delete()
+        throw new Error(`Downloaded footage ${id}, but the file is empty.`)
+    }
+
+    return { uri: file.uri, continue: true }
 }
