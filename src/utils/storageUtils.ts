@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { Directory, Paths, File } from 'expo-file-system'
 
+import { deleteFootageItemByFileUriSync } from '@/repositories/footageItemRepository'
 import { deleteAllLifelogDataAndVacuum } from '@/repositories/galleryDayRepository'
 import { invalidateQueries } from '@/utils/queryUtils'
 
@@ -43,6 +44,8 @@ function getStoredFootageFiles(): StoredFootageFile[] {
 /**
  * Deletes the oldest locally saved footage files until there is enough room for a new file.
  *
+ * Also deletes the matching footage_item database row and refreshes gallery_day.
+ *
  * @param incomingSizeBytes - The size of the file that should be downloaded.
  * @param maxStorageBytes - The maximum allowed local footage storage.
  * @return True when enough space is available after cleanup.
@@ -67,6 +70,8 @@ export function makeRoomForFootageDownload(incomingSizeBytes: number, maxStorage
     for (const storedFile of files) {
         try {
             storedFile.file.delete()
+            deleteFootageItemByFileUriSync(storedFile.uri)
+
             usedBytes -= storedFile.size
 
             console.info(`Deleted old footage file ${storedFile.uri}. Freed ${storedFile.size} bytes.`)

@@ -1,5 +1,6 @@
 import { db } from '@/database'
 import { mapRowToFootageItem } from '@/mappers/footageMapper'
+import { refreshGalleryDaySync } from '@/repositories/galleryDayRepository'
 import { AiImageMetadata } from '@/types/aiImageMetadata'
 import { FootageItem, FootageItemRow, FootageRole, FootageType } from '@/types/footageItem'
 
@@ -283,4 +284,38 @@ export async function resetProcessedSelectedFootageItems(): Promise<number> {
     )
 
     return result.changes
+}
+
+export function deleteFootageItemByFileUriSync(fileUri: string): boolean {
+    const row = db.getFirstSync<{ day_key: string | null }>(
+        `
+    SELECT day_key
+    FROM footage_item
+    WHERE file_uri = ?
+    LIMIT 1;
+    `,
+        [fileUri],
+    )
+
+    if (!row) {
+        return false
+    }
+
+    const result = db.runSync(
+        `
+    DELETE FROM footage_item
+    WHERE file_uri = ?;
+    `,
+        [fileUri],
+    )
+
+    if (result.changes <= 0) {
+        return false
+    }
+
+    if (row.day_key) {
+        refreshGalleryDaySync(row.day_key)
+    }
+
+    return true
 }
