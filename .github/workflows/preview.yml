@@ -47,5 +47,5 @@ jobs:
                   COMMIT_MSG=$(git log -1 --pretty=%s)
                   MESSAGE="$BRANCH - $COMMIT_MSG"
                   echo "ℹ️ Update message: $MESSAGE"
-                  eas update --channel preview --platform android --message "$MESSAGE"
+                  eas update --channel preview --platform android --environment production --message "$MESSAGE"
                   echo "::endgroup::"
