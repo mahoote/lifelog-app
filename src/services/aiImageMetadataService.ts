@@ -124,6 +124,15 @@ Tags:
 
 const MAX_VIDEO_CONTEXT_IMAGES = 8
 
+/**
+ * Generates AI metadata for selected photo footage items.
+ *
+ * The function processes selected photos missing metadata, or regenerates metadata when forced.
+ * It compares each accepted image with the previous accepted image to avoid saving overly similar memory cues.
+ *
+ * @param options - Batch options controlling limits and forced regeneration.
+ * @returns A summary of processed, skipped, succeeded, rejected, and failed items.
+ */
 export async function generateAiMetadataForSelectedFootageItems(
     options: AiImageMetadataOptions = {},
 ): Promise<AiImageMetadataBatchSummary> {
@@ -228,6 +237,14 @@ export async function generateAiMetadataForSelectedFootageItems(
     return summary
 }
 
+/**
+ * Generates AI metadata for video footage items using nearby photo context.
+ *
+ * Each video is described from sampled photos in the same capture event because the model receives still images as visual context.
+ *
+ * @param options - Batch options controlling limits and forced regeneration.
+ * @returns A summary of processed, skipped, succeeded, rejected, and failed videos.
+ */
 export async function generateAiMetadataForVideoFootageItems(
     options: AiImageMetadataOptions = {},
 ): Promise<AiImageMetadataBatchSummary> {
@@ -309,6 +326,20 @@ export async function generateAiMetadataForVideoFootageItems(
     return summary
 }
 
+/**
+ * Requests and validates an AI decision for a single photo footage item.
+ *
+ * The decision either accepts the current image with metadata or rejects it as too similar to the previous accepted image.
+ * A second request is made when the first response cannot be validated.
+ *
+ * @param client - OpenAI client used for the vision request.
+ * @param currentImageBase64 - Base64 encoded current image.
+ * @param currentCreatedAt - Capture datetime for the current image.
+ * @param previousAcceptedImageBase64 - Base64 encoded previous accepted image, when available.
+ * @param previousAcceptedCreatedAt - Capture datetime for the previous accepted image, when available.
+ * @returns A validated AI metadata decision.
+ * @throws When both the initial response and retry response fail validation.
+ */
 async function generateAiMetadataDecisionForFootageItem(
     client: OpenAI,
     currentImageBase64: string,
@@ -412,6 +443,17 @@ The previous response was invalid. Return valid JSON only with action, metadata,
     return retryDecision
 }
 
+/**
+ * Requests and validates AI metadata for a video using context images.
+ *
+ * A retry request is sent when the first model response cannot be parsed into valid metadata.
+ *
+ * @param client - OpenAI client used for the vision request.
+ * @param videoCreatedAt - Capture datetime for the video.
+ * @param contextImages - Base64 encoded context photos with their capture datetimes.
+ * @returns Validated AI metadata for the video.
+ * @throws When both the initial response and retry response fail validation.
+ */
 async function generateAiMetadataForVideoFromContextImages(
     client: OpenAI,
     videoCreatedAt: string,
@@ -489,6 +531,13 @@ The previous response was invalid. Return valid JSON only with title, descriptio
     return retryMetadata
 }
 
+/**
+ * Reads an image file from local storage as a base64 string.
+ *
+ * @param fileUri - Local URI of the image file.
+ * @returns The base64 encoded image contents.
+ * @throws When the file does not exist or is empty.
+ */
 async function readImageAsBase64(fileUri: string): Promise<string> {
     const file = new File(fileUri)
 
@@ -503,6 +552,14 @@ async function readImageAsBase64(fileUri: string): Promise<string> {
     return file.base64()
 }
 
+/**
+ * Reads context photo files into base64 strings for an AI vision request.
+ *
+ * Unreadable photos are skipped so one bad context file does not fail the whole video.
+ *
+ * @param items - Context photo footage items to read.
+ * @returns Base64 encoded context images with capture datetimes.
+ */
 async function readContextImagesAsBase64(
     items: FootageItem[],
 ): Promise<{ base64: string; createdAt: string }[]> {
@@ -524,6 +581,13 @@ async function readContextImagesAsBase64(
     return contextImages
 }
 
+/**
+ * Evenly samples context photos down to the maximum number allowed for a request.
+ *
+ * @param items - Candidate context photos in chronological order.
+ * @param maxCount - Maximum number of photos to return.
+ * @returns The original items when already within the limit, otherwise an even sample.
+ */
 function sampleContextPhotos(items: FootageItem[], maxCount: number): FootageItem[] {
     if (items.length <= maxCount) {
         return items
@@ -540,6 +604,15 @@ function sampleContextPhotos(items: FootageItem[], maxCount: number): FootageIte
     return result
 }
 
+/**
+ * Formats a capture datetime for AI prompt context.
+ *
+ * Valid dates include both ISO format and a simple time-of-day label.
+ * Invalid dates are returned unchanged.
+ *
+ * @param value - Datetime string to format.
+ * @returns A prompt-friendly datetime string.
+ */
 function formatAiDatetime(value: string): string {
     const date = new Date(value)
 
@@ -550,6 +623,12 @@ function formatAiDatetime(value: string): string {
     return `${date.toISOString()} (${getTimeOfDayLabel(date)})`
 }
 
+/**
+ * Converts a date into a broad time-of-day label.
+ *
+ * @param date - Date to classify.
+ * @returns One of morning, afternoon, evening, or night.
+ */
 function getTimeOfDayLabel(date: Date): string {
     const hour = date.getHours()
 
@@ -568,10 +647,24 @@ function getTimeOfDayLabel(date: Date): string {
     return 'night'
 }
 
+/**
+ * Checks whether a footage item already has complete AI metadata.
+ *
+ * @param item - Footage item to inspect.
+ * @returns True when title, description, and tags are all present.
+ */
 function hasAiMetadata(item: FootageItem): boolean {
     return Boolean(item.title?.trim() && item.description?.trim() && item.tagsJson?.trim())
 }
 
+/**
+ * Parses a JSON object from raw model output.
+ *
+ * The function first tries to parse the full text, then falls back to the text between the first and last braces.
+ *
+ * @param rawText - Raw text returned by the model.
+ * @returns The parsed JSON value, or null when no object can be found.
+ */
 function parseJsonObject(rawText: string): unknown {
     const trimmedText = rawText.trim()
 
@@ -589,6 +682,12 @@ function parseJsonObject(rawText: string): unknown {
     }
 }
 
+/**
+ * Validates a parsed AI response for photo metadata generation.
+ *
+ * @param value - Parsed JSON value to validate.
+ * @returns A normalized decision when valid, otherwise null.
+ */
 function validateAiImageMetadataDecision(value: unknown): AiImageMetadataDecision | null {
     if (!value || typeof value !== 'object') {
         return null
@@ -622,6 +721,12 @@ function validateAiImageMetadataDecision(value: unknown): AiImageMetadataDecisio
     }
 }
 
+/**
+ * Validates and normalizes AI image metadata.
+ *
+ * @param value - Parsed metadata value to validate.
+ * @returns Normalized metadata when title, description, and tags are valid, otherwise null.
+ */
 function validateAiImageMetadata(value: unknown): AiImageMetadata | null {
     if (!value || typeof value !== 'object') {
         return null
@@ -643,6 +748,12 @@ function validateAiImageMetadata(value: unknown): AiImageMetadata | null {
     }
 }
 
+/**
+ * Normalizes a text field from model output.
+ *
+ * @param value - Value to normalize.
+ * @returns Trimmed single-line text, or null for empty or non-string values.
+ */
 function normalizeText(value: unknown): string | null {
     if (typeof value !== 'string') {
         return null
@@ -653,6 +764,14 @@ function normalizeText(value: unknown): string | null {
     return normalized.length > 0 ? normalized : null
 }
 
+/**
+ * Normalizes tag values from model output.
+ *
+ * Tags are trimmed, lowercased, deduplicated, and limited to eight entries.
+ *
+ * @param value - Value to normalize as a tag array.
+ * @returns A normalized list of safe tag strings.
+ */
 function normalizeTags(value: unknown): string[] {
     if (!Array.isArray(value)) {
         return []

@@ -1,23 +1,18 @@
 import { store } from '@/store/store'
 
 /**
- * Gets the base url from the .env file for the lifelog api
- * @returns {string | null} The base url for the lifelog api
+ * Gets the base url for the lifelog api from the Redux connection state.
+ * @returns The base url for the lifelog api.
+ * @throws Error when the IP address is not set.
  */
-export function getLifelogApi(): string | null {
-    const ipAddress = store.getState().connection.ipAddress
+export function getLifelogApi(): string {
+    const ipAddress = store.getState().connection.ipAddress?.trim()
 
     if (!ipAddress) {
-        console.error('Connection IP address is not set')
-        return null
+        throw new Error('Connection IP address is not set.')
     }
 
     const url = `http://${ipAddress}:8000`
-
-    if (!url) {
-        console.error('EXPO_PUBLIC_LIFELOG_API_BASE_URL is not set')
-        return null
-    }
 
     return url.replace(/\/$/, '')
 }
@@ -40,23 +35,25 @@ export async function lifelogGet(
     }, timeoutMs)
 
     try {
-        const response = await fetch(`${getLifelogApi()}/${endpoint}`, {
+        const baseUrl = getLifelogApi()
+
+        if (!baseUrl) {
+            throw new Error('Lifelog API base URL is not set.')
+        }
+
+        const response = await fetch(`${baseUrl}/${endpoint}`, {
             signal: controller.signal,
         })
 
         if (!response.ok) {
-            console.error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
-
-            return null
+            throw new Error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
         }
 
         return response
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-
         console.warn(errorMessage ?? 'Failed to reach lifelog api', message)
-
-        return null
+        throw error
     } finally {
         clearTimeout(timeout)
     }

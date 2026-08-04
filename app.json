@@ -2,7 +2,7 @@
     "expo": {
         "name": "lifelog-app",
         "slug": "lifelog-app",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "lifelogapp",
@@ -11,6 +11,7 @@
             "icon": "./assets/expo.icon"
         },
         "android": {
+            "usesCleartextTraffic": true,
             "adaptiveIcon": {
                 "backgroundColor": "#E6F4FE",
                 "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -49,6 +50,12 @@
             "eas": {
                 "projectId": "751d9aaf-00d5-4703-b05b-059bedbfe239"
             }
+        },
+        "runtimeVersion": {
+            "policy": "appVersion"
+        },
+        "updates": {
+            "url": "https://u.expo.dev/751d9aaf-00d5-4703-b05b-059bedbfe239"
         }
     }
 }

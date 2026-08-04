@@ -17,6 +17,14 @@ import {
     ImageProcessingSummary,
 } from '@/types/imageProcessing'
 
+/**
+ * Processes all unprocessed candidate footage items.
+ *
+ * Each item is analysed for blur, general quality, and near-duplicate content.
+ * Low-quality items are rejected, while the best representative from each duplicate group is selected.
+ *
+ * @returns A summary of how many footage items were processed, selected, rejected, or failed.
+ */
 export async function processUnprocessedFootageItems(): Promise<ImageProcessingSummary> {
     const items = await getUnprocessedCandidateFootageItems()
 
@@ -104,6 +112,14 @@ export async function processUnprocessedFootageItems(): Promise<ImageProcessingS
     return summary
 }
 
+/**
+ * Selects the highest-quality item from each near-duplicate group.
+ *
+ * The item with the highest blur score is treated as the clearest representative.
+ *
+ * @param items - Analysed footage items that passed the first quality checks.
+ * @returns One representative item for each duplicate group.
+ */
 function selectBestRepresentatives(items: AnalyzedFootageItem[]): AnalyzedFootageItem[] {
     const groups = groupNearDuplicateItems(items)
 
@@ -114,6 +130,14 @@ function selectBestRepresentatives(items: AnalyzedFootageItem[]): AnalyzedFootag
     )
 }
 
+/**
+ * Groups analysed footage items that appear to represent the same moment or scene.
+ *
+ * Items are grouped when they share a capture event, or when they are close in time and visually similar.
+ *
+ * @param items - Analysed footage items to group.
+ * @returns Groups of near-duplicate footage items.
+ */
 function groupNearDuplicateItems(items: AnalyzedFootageItem[]): AnalyzedFootageItem[][] {
     const groups: AnalyzedFootageItem[][] = []
 
@@ -131,6 +155,13 @@ function groupNearDuplicateItems(items: AnalyzedFootageItem[]): AnalyzedFootageI
     return groups
 }
 
+/**
+ * Checks whether a footage item belongs in an existing near-duplicate group.
+ *
+ * @param item - The analysed item to compare.
+ * @param group - The existing group to compare against.
+ * @returns True when the item matches at least one item in the group.
+ */
 function belongsToGroup(item: AnalyzedFootageItem, group: AnalyzedFootageItem[]): boolean {
     return group.some(groupItem => {
         const isCloseInTime = areItemsCloseInTime(item.item, groupItem.item)
@@ -150,6 +181,13 @@ function belongsToGroup(item: AnalyzedFootageItem, group: AnalyzedFootageItem[])
     })
 }
 
+/**
+ * Checks whether two footage items were captured within the duplicate grouping window.
+ *
+ * @param firstItem - The first footage item to compare.
+ * @param secondItem - The second footage item to compare.
+ * @returns True when both dates are valid and close enough in time.
+ */
 function areItemsCloseInTime(firstItem: FootageItem, secondItem: FootageItem): boolean {
     const firstTime = new Date(firstItem.createdAt).getTime()
     const secondTime = new Date(secondItem.createdAt).getTime()
@@ -161,6 +199,13 @@ function areItemsCloseInTime(firstItem: FootageItem, secondItem: FootageItem): b
     return Math.abs(firstTime - secondTime) <= imageProcessingConfig.duplicateGroupingWindowMs
 }
 
+/**
+ * Marks a footage item as processed with a rejection reason.
+ *
+ * @param footageItemId - The footage item id to reject.
+ * @param reason - The reason why the item was rejected.
+ * @returns True when the repository update succeeds.
+ */
 async function rejectItem(
     footageItemId: string,
     reason: ImageProcessingRejectionReason,
@@ -168,6 +213,12 @@ async function rejectItem(
     return markFootageItemProcessed(footageItemId, `Rejected by image processing: ${reason}`)
 }
 
+/**
+ * Converts an analysis error into a stored image processing rejection reason.
+ *
+ * @param error - The thrown analysis error.
+ * @returns The rejection reason that best matches the failure.
+ */
 function getFailureReason(error: unknown): ImageProcessingRejectionReason {
     const message = error instanceof Error ? error.message.toLowerCase() : ''
 

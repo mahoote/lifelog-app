@@ -1,0 +1,51 @@
+name: Preview Update
+
+on:
+    pull_request:
+        types: [labeled, synchronize]
+
+jobs:
+    preview-update:
+        if: |
+            (github.event.action == 'labeled' && github.event.label.name == 'eas-update-android:preview') ||
+            (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'eas-update-android:preview'))
+        runs-on: ubuntu-latest
+
+        # Prevent multiple pushes spamming EAS updates
+        concurrency:
+            group: android-preview-update-${{ github.event.pull_request.number }}
+            cancel-in-progress: true
+
+        steps:
+            - name: ⬇️ Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  fetch-depth: 0
+
+            - name: 🟢 Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 'node'
+
+            - name: 📦 Install dependencies
+              run: npm ci
+
+            - name: 📥 Install EAS CLI
+              run: npm install -g eas-cli
+
+            - name: 🔐 Authenticate with Expo
+              run: |
+                  echo "::group::Expo Login"
+                  npx expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
+                  echo "::endgroup::"
+
+            - name: 🔄 Update Android Preview Channel
+              run: |
+                  echo "::group::Running Android EAS Update"
+                  BRANCH="${{ github.head_ref }}"
+                  COMMIT_MSG=$(git log -1 --pretty=%s)
+                  MESSAGE="$BRANCH - $COMMIT_MSG"
+                  echo "ℹ️ Update message: $MESSAGE"
+                  eas update --channel preview --platform android --environment production --message "$MESSAGE"
+                  echo "::endgroup::"
