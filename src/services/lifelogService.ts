@@ -14,7 +14,7 @@ import { makeRoomForFootageDownload } from '@/utils/storageUtils'
 export async function getLifelogHealth(): Promise<LifelogHealth> {
     const response = await lifelogGet('health', 5_000, 'Failed to reach lifelog health endpoint.')
 
-    return (await response.json()) as LifelogHealth
+    return (await response!.json()) as LifelogHealth
 }
 
 /**
@@ -25,7 +25,7 @@ export async function getLifelogHealth(): Promise<LifelogHealth> {
 export async function getLifelogPendingFootage(): Promise<CaptureEvent[]> {
     const response = await lifelogGet('footage', 10_000, 'Failed to fetch pending footage.')
 
-    const captureEvents = (await response.json()) as CaptureEventResponse[]
+    const captureEvents = (await response!.json()) as CaptureEventResponse[]
 
     return captureEvents.map(mapCaptureEvent)
 }

@@ -1,20 +1,20 @@
-import { store } from '@/store/store'
-
 /**
  * Gets the base url for the lifelog api from the Redux connection state.
  * @returns The base url for the lifelog api.
  * @throws Error when the IP address is not set.
  */
 export function getLifelogApi(): string {
-    const ipAddress = store.getState().connection.ipAddress?.trim()
+    // const ipAddress = store.getState().connection.ipAddress?.trim()
+    //
+    // if (!ipAddress) {
+    //     throw new Error('Connection IP address is not set.')
+    // }
 
-    if (!ipAddress) {
-        throw new Error('Connection IP address is not set.')
-    }
+    // const url = `http://10.191.100.218:8000`
 
-    const url = `http://10.191.100.218:8000`
+    // return url.replace(/\/$/, '')
 
-    return url.replace(/\/$/, '')
+    return `http://10.191.100.218:8000`
 }
 
 /**
