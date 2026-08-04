@@ -49,7 +49,7 @@ export default function DeviceStatusCard() {
 
             Alert.alert(
                 'Connection error',
-                'Something went wrong while trying to connect to the glasses. Please check the IP address and try again.',
+                `Something went wrong while trying to connect to the glasses. Please check the IP address and try again. Env IP${process.env.EXPO_PUBLIC_LIFELOG_API_IP}, Env open api:${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
             )
         } finally {
             setConnectLoading(false)
