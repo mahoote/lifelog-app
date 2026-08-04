@@ -41,7 +41,7 @@ export async function lifelogGet(
 
         if (!response.ok) {
             throw new Error(
-                `${errorMessage ?? 'Failed to fetch lifelog data'}. Status: ${response.status}`,
+                `${errorMessage ?? 'Failed to fetch lifelog data'}. Status: ${response.status}, url: ${baseUrl}/${endpoint}`,
             )
         }
 
