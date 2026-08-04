@@ -229,9 +229,8 @@ function calculateLaplacianVariance(grayscale: Mat): number {
         OpenCV.convertScaleAbs(laplacian16, laplacianAbs)
 
         const pixels = laplacianAbs.toBuffer('uint8').buffer
-        const variance = calculateVariance(pixels)
 
-        return variance
+        return calculateVariance(pixels)
     } finally {
         resized.release()
         laplacian16.release()
