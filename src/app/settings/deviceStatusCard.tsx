@@ -1,20 +1,20 @@
 import { faExclamation, faGlasses, faWifi } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { useState } from 'react'
-import { Pressable, Text, TextInput, View } from 'react-native'
+import { Alert, Pressable, Text, TextInput, View } from 'react-native'
+
 import { colors } from '@/constants/colors'
 import { getLifelogHealth } from '@/services/lifelogService'
 import { connectionActions } from '@/store/connectionSlice'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
-const DEFAULT_DEVICE_IP = '10.191.100.218'
-
 export default function DeviceStatusCard() {
     const dispatch = useAppDispatch()
     const wifiConnected = useAppSelector(state => state.connection.wifiConnected)
+    const ipAddress = useAppSelector(state => state.connection.ipAddress)
 
     const [connectLoading, setConnectLoading] = useState(false)
-    const [deviceIp, setDeviceIp] = useState(DEFAULT_DEVICE_IP)
+    const [deviceIp, setDeviceIp] = useState(ipAddress || '')
 
     /**
      * Fetches the current health of the lifelog api.
@@ -23,11 +23,37 @@ export default function DeviceStatusCard() {
     const handleConnect = async () => {
         setConnectLoading(true)
 
-        dispatch(connectionActions.setIpAddress(deviceIp.trim()))
+        try {
+            const trimmedDeviceIp = deviceIp.trim()
 
-        const health = await getLifelogHealth()
-        dispatch(connectionActions.setWifiConnected(health))
-        setConnectLoading(false)
+            dispatch(connectionActions.setIpAddress(trimmedDeviceIp))
+
+            const health = await getLifelogHealth()
+
+            if (!health) {
+                dispatch(connectionActions.setWifiConnected(null))
+
+                Alert.alert(
+                    'Connection failed',
+                    'Could not connect to the glasses. Check that the glasses are powered on, connected to WiFi, and using the correct IP address.',
+                )
+
+                return
+            }
+
+            dispatch(connectionActions.setWifiConnected(health))
+        } catch (error) {
+            console.error('Failed to connect to glasses:', error)
+
+            dispatch(connectionActions.setWifiConnected(null))
+
+            Alert.alert(
+                'Connection error',
+                'Something went wrong while trying to connect to the glasses. Please check the IP address and try again.',
+            )
+        } finally {
+            setConnectLoading(false)
+        }
     }
 
     return (
