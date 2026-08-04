@@ -1,3 +1,4 @@
+import { Alert } from 'react-native'
 import { store } from '@/store/store'
 
 /**
@@ -47,6 +48,7 @@ export async function lifelogGet(
         if (!response.ok) {
             console.error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
 
+            Alert.alert('Error', errorMessage ?? 'Failed to fetch lifelog data')
             return null
         }
 
@@ -55,6 +57,8 @@ export async function lifelogGet(
         const message = error instanceof Error ? error.message : String(error)
 
         console.warn(errorMessage ?? 'Failed to reach lifelog api', message)
+
+        Alert.alert('Error', errorMessage ?? 'Failed to reach lifelog api')
 
         return null
     } finally {
