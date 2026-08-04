@@ -12,7 +12,7 @@ export function getLifelogApi(): string {
         throw new Error('Connection IP address is not set.')
     }
 
-    const url = `http://${ipAddress}:8000`
+    const url = `http://10.191.100.218:8000`
 
     return url.replace(/\/$/, '')
 }
