@@ -27,35 +27,33 @@ export async function lifelogGet(
     endpoint: string,
     timeoutMs = 10_000,
     errorMessage?: string,
-): Promise<Response> {
+): Promise<Response | null> {
     const controller = new AbortController()
     const timeout = setTimeout(() => {
+        console.warn(`Lifelog API request timed out after ${timeoutMs}ms: ${endpoint}`)
         controller.abort()
     }, timeoutMs)
 
     try {
         const baseUrl = getLifelogApi()
+
+        if (!baseUrl) {
+            throw new Error('Lifelog API base URL is not set.')
+        }
+
         const response = await fetch(`${baseUrl}/${endpoint}`, {
             signal: controller.signal,
         })
 
         if (!response.ok) {
-            throw new Error(
-                `${errorMessage ?? 'Failed to fetch lifelog data'}. Status: ${response.status}, url: ${baseUrl}/${endpoint}`,
-            )
+            throw new Error(`${errorMessage ?? 'Failed to fetch lifelog data'}: ${response.status}`)
         }
 
         return response
     } catch (error) {
-        if (error instanceof Error) {
-            if (error.name === 'AbortError') {
-                throw new Error(`Lifelog API request timed out after ${timeoutMs}ms: ${endpoint}`)
-            }
-
-            throw new Error(errorMessage ?? error.message)
-        }
-
-        throw new Error(errorMessage ?? 'Failed to reach lifelog api.')
+        const message = error instanceof Error ? error.message : String(error)
+        console.warn(errorMessage ?? 'Failed to reach lifelog api', message)
+        throw error
     } finally {
         clearTimeout(timeout)
     }
